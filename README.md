@@ -1,8 +1,8 @@
-OpenNARS Declarative Core
+MiniNARS
 -------------------------
 ![OpenNARS_Declarative_Core_Logo](https://user-images.githubusercontent.com/8284677/53459976-6ee8bb80-3a33-11e9-8ae4-2325fc587565.png)
 
-本项目源自 https://github.com/opennars/opennars , 一个以**通用人工智能**( [Artificial General Intelligence](http://www.agi-conf.org/) )为目标的项目, 由 [王培](https://cis.temple.edu/~pwang/) 老师发起.
+本项目源自 https://github.com/patham9/opennars_declarative_core , 一个以**通用人工智能**( [Artificial General Intelligence](http://www.agi-conf.org/) )为目标的项目, 由 [王培](https://cis.temple.edu/~pwang/) 老师发起.
 
 如何运行
 -----------
