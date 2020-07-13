@@ -8,8 +8,9 @@ MiniNARS
 
 如何运行
 -----------
-下载并安装 IntelliJ IDEA (社区版) https://www.jetbrains.com/idea/download/
-双击 mininars.iml, 点击 IDEA 编辑器右上角的绿色的运行按钮.
+1. 下载或克隆本项目.
+1. 下载并安装 IntelliJ IDEA (社区版) https://www.jetbrains.com/idea/download/
+1. 双击 mininars.iml, 点击 IDEA 编辑器右上角的绿色的运行按钮.
 
 
 mini nars 计划
