@@ -24,9 +24,9 @@
 package nars.gui;
 
 import javax.swing.*;
-
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 
 /**
  * Specify shared properties of NARS windows

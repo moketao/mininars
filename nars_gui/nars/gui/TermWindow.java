@@ -23,15 +23,17 @@
  */
 package nars.gui;
 
-import javax.swing.*;
-
-import java.awt.*;
-import java.awt.event.*;
-
 import nars.entity.Concept;
 import nars.entity.EntityObserver;
-//import nars.io.StringParser;
 import nars.storage.Memory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+
+//import nars.io.StringParser;
 
 /**
  * JWindow accept a Term, then display the content of the corresponding Concept

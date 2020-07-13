@@ -23,10 +23,12 @@
  */
 package nars.gui;
 
-import java.awt.FileDialog;
-import java.io.*;
-
 import nars.io.IInferenceRecorder;
+
+import java.awt.*;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * Inference log, which record input/output of each inference step

@@ -23,24 +23,6 @@
  */
 package nars.gui;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowEvent;
-import java.util.ArrayList;
-
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-
 import nars.entity.Concept;
 import nars.entity.Task;
 import nars.io.ExperienceReader;
@@ -52,6 +34,13 @@ import nars.main.Reasoner;
 import nars.main_nogui.Parameters;
 import nars.main_nogui.ReasonerBatch;
 import nars.storage.Memory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.util.ArrayList;
 
 /**
  * Main window of NARS GUI
@@ -126,6 +115,7 @@ public class MainWindow extends NarsFrame implements ActionListener, OutputChann
         this.reasoner = reasoner;
         memory = reasoner.getMemory();
         record = memory.getRecorder();
+
         experienceWriter = new ExperienceWriter(reasoner);
         inputWindow = reasoner.getInputWindow();
         conceptWin = new TermWindow(memory);
@@ -236,6 +226,9 @@ public class MainWindow extends NarsFrame implements ActionListener, OutputChann
         setVisible(true);
 
         initTimer();
+
+        record.show();
+        record.play();
     }
 
     /**

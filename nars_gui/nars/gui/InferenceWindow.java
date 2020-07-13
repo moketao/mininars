@@ -23,12 +23,11 @@
  */
 package nars.gui;
 
-import javax.swing.*;
+import nars.io.IInferenceRecorder;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-
-import nars.io.*;
 //import nars.term.Term;
 
 /**

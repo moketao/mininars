@@ -23,34 +23,20 @@
  */
 package nars.gui;
 
-import java.awt.BorderLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.Scrollbar;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
-import java.awt.event.WindowEvent;
-
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollBar;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-
 import nars.entity.Item;
 import nars.main_nogui.Parameters;
 import nars.storage.Bag;
 import nars.storage.BagObserver;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
 /**
  * JWindow display the priority distribution of items within a given bag
  */
 public class BagWindow<BagType extends Item> extends NarsFrame implements ActionListener, AdjustmentListener,
-		BagObserver<BagType> {
+        BagObserver<BagType> {
 
     /**
      * The bag to be displayed

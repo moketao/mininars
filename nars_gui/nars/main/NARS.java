@@ -23,6 +23,7 @@
  */
 package nars.main;
 
+import nars.gui3d.Show3D;
 import nars.io.ExperienceReader;
 import nars.main_nogui.CommandLineParameters;
 import nars.main_nogui.NARSBatch;
@@ -67,6 +68,8 @@ public class NARS implements Runnable {
         NARS nars = new NARS();
         nars.init(args);
         nars.start();
+
+        Show3D.main(null);
     }
 
     /**

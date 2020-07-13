@@ -22,20 +22,16 @@
  * THE SOFTWARE.
  */
 package nars.gui;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowEvent;
-
-import javax.swing.JButton;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 
 import nars.io.ExperienceReader;
 import nars.io.InputChannel;
 import nars.main_nogui.ReasonerBatch;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 
 /**
  * Input window, accepting user tasks
@@ -69,7 +65,7 @@ public class InputWindow extends NarsFrame implements ActionListener, InputChann
         c.gridwidth = GridBagConstraints.REMAINDER;
         c.weightx = 1.0;
         c.weighty = 1.0;
-        inputText = new JTextArea("");
+        inputText = new JTextArea("<乌鸦 --> 鸟>.\n<鸟 --> 动物>.");
         JScrollPane scrollPane = new JScrollPane(inputText);
 //        gridbag.setConstraints(inputText, c);
         gridbag.setConstraints(scrollPane, c);

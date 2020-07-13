@@ -23,20 +23,15 @@
  */
 package nars.gui;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowEvent;
-
-import javax.swing.JButton;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-
 import nars.entity.Concept;
 import nars.entity.EntityObserver;
 import nars.storage.BagObserver;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 //import java.beans.PropertyChangeEvent;
 //import java.beans.PropertyChangeListener;
 

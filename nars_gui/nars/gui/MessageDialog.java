@@ -22,10 +22,13 @@
  * THE SOFTWARE.
  */
 package nars.gui;
-import javax.swing.*;
 
+import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 
 /**
  * Pop-up message for the user to accept
