@@ -432,6 +432,7 @@ public class Memory {
                         novelTasks.putIn(task);    // new concept formation
                     } else {
                         recorder.append("!!! Neglected: " + task + "\n");
+                        Show3D.inst().remove("remove",task);
                     }
                 }
             }
@@ -451,7 +452,7 @@ public class Memory {
     /**
      * Select a concept to fire.
      */
-    private void processConcept() {
+    public void processConcept() {
         currentConcept = concepts.takeOut();
         if (currentConcept != null) {
             currentTerm = currentConcept.getTerm();

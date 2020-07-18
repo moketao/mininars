@@ -130,7 +130,6 @@ public final class Concept extends Item {
      * To accept a new judgment as isBelief, and check for revisions and
      * solutions
      *
-     * @param judg The judgment to be accepted
      * @param task The task to be processed
      * @return Whether to continue the processing of the task
      */
@@ -204,7 +203,6 @@ public final class Concept extends Item {
      * The only method that calls the TaskLink constructor.
      *
      * @param task The task to be linked
-     * @param content The content of the task
      */
     private void linkToTask(Task task) {
         BudgetValue taskBudget = task.getBudget();

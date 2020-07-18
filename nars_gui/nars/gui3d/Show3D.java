@@ -39,7 +39,7 @@ public class Show3D extends SimpleApplication{
     private Material mat;
     private String txtB = "WASD移动摄像机";
     private BitmapFont myFont;
-    private HashMap<String, Item3D> map = new HashMap<>();
+    private HashMap<Integer, Item3D> map = new HashMap<>();
     private ArrayList<Frame3D> list = new ArrayList<>();
     private ArrayList<Frame3D> frameQueue = new ArrayList<>();
     private boolean showInfo = false;
@@ -92,6 +92,7 @@ public class Show3D extends SimpleApplication{
         app.settings.setTitle("3d win");
         flyCamAppState.getCamera().setDragToRotate(true);
         flyCamAppState.getCamera().setMoveSpeed(5);
+        flyCamAppState.getCamera().setZoomSpeed(3.5f);
         this.lostFocusBehavior = LostFocusBehavior.Disabled;
         this.cam.setLocation(new Vector3f(5.5826545F, 3.6192513F, 8.016988F));
         this.cam.setRotation(new Quaternion(-0.04787097F, 0.9463123F, -0.16569641F, -0.27339742F));
@@ -189,7 +190,12 @@ public class Show3D extends SimpleApplication{
         }
         frameQueue.add(frame); //先加到等待队列,等线程有空了再处理(放到场景中)
     }
-    Item3D getItem3D(String key){
+
+    public <E extends Item> void remove(String opt, E overflowItem) {
+        Item3D item3D = map.get(overflowItem.hashCode());
+        item3D.geo.removeFromParent();
+    }
+    Item3D getItem3D(int key){
         Item3D item3D = map.get(key);
         if(item3D==null){
             item3D = new Item3D();
@@ -198,7 +204,8 @@ public class Show3D extends SimpleApplication{
         return item3D;
     }
     private Frame3D conceptToFrame(String opt, Concept concept) {
-        Item3D item3D = getItem3D(concept.getKey());
+        int key = concept.hashCode();
+        Item3D item3D = getItem3D(key);
         if(!item3D.hasInit){
             item3D.type = Item3D.ItemTYPE.Concept;
             item3D.item = concept;
@@ -209,6 +216,7 @@ public class Show3D extends SimpleApplication{
             g.setMaterial(matNode1);
             g.setQueueBucket(RenderQueue.Bucket.Transparent);
             item3D.geo = g;
+            map.put(key,item3D);
         }
         Frame3D frame3D = new Frame3D();
         frame3D.item3d = item3D;
@@ -217,7 +225,8 @@ public class Show3D extends SimpleApplication{
     }
 
     private Frame3D taskToFrame(String opt, Task task) {
-        Item3D item3D = getItem3D(task.getKey());
+        int key = task.hashCode();
+        Item3D item3D = getItem3D(key);
         if(!item3D.hasInit){
             item3D.type = Item3D.ItemTYPE.Concept;
             item3D.item = task;
@@ -228,6 +237,7 @@ public class Show3D extends SimpleApplication{
             g.setMaterial(matNode1);
             g.setQueueBucket(RenderQueue.Bucket.Transparent);
             item3D.geo = g;
+            map.put(key,item3D);
         }
         Frame3D frame3D = new Frame3D();
         frame3D.item3d = item3D;

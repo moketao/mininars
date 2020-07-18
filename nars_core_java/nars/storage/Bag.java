@@ -26,6 +26,7 @@ package nars.storage;
 import java.util.*;
 
 import nars.entity.Item;
+import nars.gui3d.Show3D;
 import nars.inference.BudgetFunctions;
 import nars.main_nogui.Parameters;
 
@@ -205,6 +206,7 @@ public abstract class Bag<E extends Item> {
         if (overflowItem != null) {             // remove overflow
             String overflowKey = overflowItem.getKey();
             nameTable.remove(overflowKey);
+            Show3D.inst().remove("remove",overflowItem);
             return (overflowItem != newItem);
         } else {
             return true;
