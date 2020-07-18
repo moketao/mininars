@@ -35,11 +35,15 @@ import nars.entity.Task;
 import nars.entity.TaskLink;
 import nars.entity.TermLink;
 import nars.entity.TruthValue;
+import nars.gui3d.Frame3D;
+import nars.gui3d.Show3D;
 import nars.inference.BudgetFunctions;
 import nars.io.IInferenceRecorder;
 import nars.language.Term;
 import nars.main_nogui.Parameters;
 import nars.main_nogui.ReasonerBatch;
+
+import static nars.gui3d.Show3D.*;
 
 /**
  * The memory of the system.
@@ -217,6 +221,7 @@ public class Memory {
         Concept concept = concepts.get(n);
         if (concept == null) {
             concept = new Concept(term, this); // the only place to make a new Concept
+            Show3D.inst().append(INSERT_CONCEPT,concept);
             boolean created = concepts.putIn(concept);
             if (!created) {
                 return null;
@@ -303,6 +308,7 @@ public class Memory {
     private void derivedTask(Task task) {
         if (task.getBudget().aboveThreshold()) {
             recorder.append("!!! Derived: " + task + "\n");
+            Show3D.inst().append(DERIVED,task);
             float budget = task.getBudget().summary();
 //            float minSilent = reasoner.getMainWindow().silentW.value() / 100.0f;
             float minSilent = reasoner.getSilenceValue().get() / 100.0f;
@@ -465,6 +471,7 @@ public class Memory {
     private void immediateProcess(Task task) {
         currentTask = task; // one of the two places where this variable is set
         recorder.append("!!! Insert: " + task + "\n");
+        Show3D.inst().append(INSERT_TASK,task);
         currentTerm = task.getContent();
         currentConcept = getConcept(currentTerm);
         if (currentConcept != null) {
