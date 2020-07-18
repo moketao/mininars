@@ -46,6 +46,7 @@ public class Show3D extends SimpleApplication{
     private Material matNode1;
     private float nodeWidth = 0.2f;
     private boolean online = true;
+    private ArrayList<Item3D> willRemove = new ArrayList<>();
 
     Show3D(AppState... initialStates){
         super(initialStates);
@@ -191,9 +192,9 @@ public class Show3D extends SimpleApplication{
         frameQueue.add(frame); //先加到等待队列,等线程有空了再处理(放到场景中)
     }
 
-    public <E extends Item> void remove(String opt, E overflowItem) {
+    public <E extends Item> void remove(E overflowItem) {
         Item3D item3D = map.get(overflowItem.hashCode());
-        item3D.geo.removeFromParent();
+        willRemove.add(item3D);
     }
     Item3D getItem3D(int key){
         Item3D item3D = map.get(key);
@@ -258,6 +259,10 @@ public class Show3D extends SimpleApplication{
         while (frameQueue.size()>0){
             Frame3D frame = frameQueue.remove(frameQueue.size() - 1);
             addToRoot(frame);
+        }
+        while (willRemove.size()>0){
+            Item3D item3D = willRemove.remove(willRemove.size() - 1);
+            item3D.geo.removeFromParent();
         }
         super.simpleUpdate(tpf);
     }

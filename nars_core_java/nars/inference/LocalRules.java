@@ -98,14 +98,14 @@ public class LocalRules {
      * @param task The task to be processed
      * @param memory Reference to the memory
      */
-    public static void trySolution(Sentence belief, Task task, Memory memory) {
+    public static boolean trySolution(Sentence belief, Task task, Memory memory) {
         Sentence problem = task.getSentence();
         Sentence oldBest = task.getBestSolution();
         float newQ = solutionQuality(problem, belief);
         if (oldBest != null) {
             float oldQ = solutionQuality(problem, oldBest);
             if (oldQ >= newQ) {
-                return;
+                return false;
             }
         }
         task.setBestSolution(belief);
@@ -116,6 +116,7 @@ public class LocalRules {
         if ((budget != null) && budget.aboveThreshold()) {
             memory.activatedTask(budget, belief, task.getParentBelief());
         }
+        return true;
     }
 
     /**

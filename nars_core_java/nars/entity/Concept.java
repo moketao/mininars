@@ -25,6 +25,7 @@ package nars.entity;
 
 import java.util.ArrayList;
 
+import nars.gui3d.Show3D;
 import nars.inference.BudgetFunctions;
 import nars.inference.LocalRules;
 import nars.inference.RuleTables;
@@ -143,6 +144,7 @@ public final class Concept extends Item {
                 if (task.getParentTask().getSentence().isJudgment()) {
                     task.getBudget().decPriority(0);    // duplicated task
                 }   // else: activated belief
+                Show3D.inst().remove(task);
                 return;
             } else if (LocalRules.revisible(judg, oldBelief)) {
                 memory.newStamp = Stamp.make(newStamp, oldStamp, memory.getTime());
@@ -159,6 +161,7 @@ public final class Concept extends Item {
             }
             addToTable(judg, beliefs, Parameters.MAXIMUM_BELIEF_LENGTH);
         }
+        Show3D.inst().remove(task);
     }
 
     /**
@@ -184,14 +187,17 @@ public final class Concept extends Item {
             questions.add(task);
         }
         if (questions.size() > Parameters.MAXIMUM_QUESTIONS_LENGTH) {
-            questions.remove(0);    // FIFO
+            Task remove = questions.remove(0);// FIFO
+            Show3D.inst().remove(remove);
         }
         Sentence newAnswer = evaluation(ques, beliefs);
         if (newAnswer != null) {
 //            LocalRules.trySolution(ques, newAnswer, task, memory);
-            LocalRules.trySolution(newAnswer, task, memory);
+            boolean ok = LocalRules.trySolution(newAnswer, task, memory);
+            if(!ok)Show3D.inst().remove(task);
             return newAnswer.getTruth().getExpectation();
         } else {
+            if(!newQuestion) Show3D.inst().remove(task);
             return 0.5f;
         }
     }

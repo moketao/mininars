@@ -206,7 +206,7 @@ public abstract class Bag<E extends Item> {
         if (overflowItem != null) {             // remove overflow
             String overflowKey = overflowItem.getKey();
             nameTable.remove(overflowKey);
-            Show3D.inst().remove("remove",overflowItem);
+            Show3D.inst().remove(overflowItem);
             return (overflowItem != newItem);
         } else {
             return true;

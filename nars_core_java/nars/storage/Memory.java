@@ -432,7 +432,7 @@ public class Memory {
                         novelTasks.putIn(task);    // new concept formation
                     } else {
                         recorder.append("!!! Neglected: " + task + "\n");
-                        Show3D.inst().remove("remove",task);
+                        Show3D.inst().remove(task);
                     }
                 }
             }
@@ -472,12 +472,14 @@ public class Memory {
     private void immediateProcess(Task task) {
         currentTask = task; // one of the two places where this variable is set
         recorder.append("!!! Insert: " + task + "\n");
-        Show3D.inst().append(INSERT_TASK,task);
         currentTerm = task.getContent();
         currentConcept = getConcept(currentTerm);
         if (currentConcept != null) {
+            Show3D.inst().append(INSERT_TASK,task);
             activateConcept(currentConcept, task.getBudget());
             currentConcept.directProcess(task);
+        }else{
+            Show3D.inst().remove(task);
         }
     }
 
