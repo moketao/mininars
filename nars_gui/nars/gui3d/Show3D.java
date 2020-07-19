@@ -208,6 +208,7 @@ public class Show3D extends SimpleApplication{
         int key = concept.hashCode();
         Item3D item3D = getItem3D(key);
         if(!item3D.hasInit){
+            item3D.hasInit = true;
             item3D.type = Item3D.ItemTYPE.Concept;
             item3D.item = concept;
             item3D.key = concept.getKey();
@@ -229,6 +230,7 @@ public class Show3D extends SimpleApplication{
         int key = task.hashCode();
         Item3D item3D = getItem3D(key);
         if(!item3D.hasInit){
+            item3D.hasInit = true;
             item3D.type = Item3D.ItemTYPE.Concept;
             item3D.item = task;
             item3D.key = task.getKey();

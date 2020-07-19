@@ -274,6 +274,7 @@ public class Memory {
             newTasks.add(task);       // wait to be processed in the next workCycle
         } else {
             recorder.append("!!! Neglected: " + task + "\n");
+            Show3D.inst().remove(task);
         }
     }
 
@@ -318,6 +319,7 @@ public class Memory {
             newTasks.add(task);
         } else {
             recorder.append("!!! Ignored: " + task + "\n");
+            Show3D.inst().remove(task);
         }
     }
 
