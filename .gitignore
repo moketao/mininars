@@ -1,3 +1,10 @@
 /dist/
 /nbproject/private/
 /out/
+/testsrc/
+/lib/desktop.ini
+/lib/jme3-testdata.jar
+/lib/jme3-testdata-sources.jar
+/lib/jMonkeyEngine3.jar
+/lib/jmonkeyengine-3.3.2-stable.zip
+/lib/nifty-examples.jar

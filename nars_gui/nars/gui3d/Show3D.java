@@ -9,11 +9,13 @@ import com.jme3.font.Rectangle;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
+import com.jme3.scene.Node;
 import com.jme3.scene.control.BillboardControl;
 import com.jme3.scene.debug.Arrow;
 import com.jme3.scene.debug.Grid;
@@ -37,16 +39,18 @@ public class Show3D extends SimpleApplication{
     public static final String DERIVED = "derived task"; //衍生任务/分解任务
     private static FlyCamAppState flyCamAppState;
     private Material mat;
-    private String txtB = "WASD移动摄像机";
     private BitmapFont myFont;
     private HashMap<Integer, Item3D> map = new HashMap<>();
     private ArrayList<Frame3D> list = new ArrayList<>();
     private ArrayList<Frame3D> frameQueue = new ArrayList<>();
     private boolean showInfo = false;
-    private Material matNode1;
-    private float nodeWidth = 0.2f;
+    private Material matTerm;
+    private Material matTask;
+    private float nodeWidth = 0.5f;
+    private float taskWidth = 0.5f;
     private boolean online = true;
     private ArrayList<Item3D> willRemove = new ArrayList<>();
+    private RenderQueue.Bucket renderQueue;
 
     Show3D(AppState... initialStates){
         super(initialStates);
@@ -59,6 +63,7 @@ public class Show3D extends SimpleApplication{
         AppSettings setting= new AppSettings(true);
         setting.setResizable(true);
         setting.setTitle("3d Win");
+        setting.setVSync(false);
         app.setSettings(setting);
         app.showSettings = false;
 
@@ -80,10 +85,15 @@ public class Show3D extends SimpleApplication{
     private void initRes() {
         myFont = assetManager.loadFont("font/fontcn.fnt");
         mat = new Material(this.assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        matNode1 = new Material(this.assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        Texture textureNode1 = this.assetManager.loadTexture("./node1.png");
-        matNode1.setTexture("ColorMap",textureNode1);
-        matNode1.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
+        matTerm = new Material(this.assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        matTask = new Material(this.assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        Texture textureNode = this.assetManager.loadTexture("./node.png");
+        Texture textureTask = this.assetManager.loadTexture("./task.png");
+        renderQueue = RenderQueue.Bucket.Transparent;
+        matTerm.setTexture("ColorMap",textureNode);
+        matTerm.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
+        matTask.setTexture("ColorMap",textureTask);
+        matTask.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
         mat.setColor("Color", ColorRGBA.Blue);
         mat.getAdditionalRenderState().setWireframe(true);
         mat.getAdditionalRenderState().setLineWidth(1.0F);
@@ -92,12 +102,13 @@ public class Show3D extends SimpleApplication{
     private void init3D() {
         app.settings.setTitle("3d win");
         flyCamAppState.getCamera().setDragToRotate(true);
-        flyCamAppState.getCamera().setMoveSpeed(5);
-        flyCamAppState.getCamera().setZoomSpeed(3.5f);
+        flyCamAppState.getCamera().setMoveSpeed(4.6f);
+        flyCamAppState.getCamera().setZoomSpeed(12f);
+        this.cam.setParallelProjection(false);
+        this.cam.setFrustumPerspective(45f, 1f, 0.1f, 1000f);
         this.lostFocusBehavior = LostFocusBehavior.Disabled;
-        this.cam.setLocation(new Vector3f(5.5826545F, 3.6192513F, 8.016988F));
-        this.cam.setRotation(new Quaternion(-0.04787097F, 0.9463123F, -0.16569641F, -0.27339742F));
-        Line line = new Line(new Vector3f(2.0f, 2.0f, 2.0f), new Vector3f(0f, 0f, 0f));
+        resetCam();
+        Line line = new Line(new Vector3f(0, 2.5f, 0.0f), new Vector3f(0f, 1.5f, 0f));
         Geometry geomLine = new Geometry("Line", line);
         geomLine.setMaterial(this.mat);
         this.rootNode.attachChild(geomLine);
@@ -108,12 +119,18 @@ public class Show3D extends SimpleApplication{
         createTxt3d();
     }
 
+    private void resetCam() {
+        this.cam.setLocation(new Vector3f(5.5826545F, 3.6192513F, 8.016988F));
+        this.cam.setRotation(new Quaternion(-0.04787097F, 0.9463123F, -0.16569641F, -0.27339742F));
+    }
+
     private void createTxt3d() {
         BitmapText txt = new BitmapText(myFont, false);
         txt.setBox(new Rectangle(0.0F, 0.0F, 6.0F, 3.0F));
         txt.setQueueBucket(RenderQueue.Bucket.Transparent);
         txt.setSize(0.5F);
-        txt.setText(this.txtB);
+        txt.setText("WASD移动摄像机\n拖拽左键可旋转摄像机");
+        txt.setLocalTranslation(0,0,-6f);
         this.rootNode.attachChild(txt);
     }
 
@@ -129,15 +146,18 @@ public class Show3D extends SimpleApplication{
         Label txt = new Label(" 设置 ");
         txt.setFontSize(15);
         myWindow.addChild(txt);
-        Button clickMeBtn = new Button("显示/隐藏 OpenGL 信息");
-        clickMeBtn.setFontSize(20);
-        Button clickMe = myWindow.addChild(clickMeBtn);
-        clickMe.addClickCommands(new Command<Button>() {
-            @Override
-            public void execute( Button source ) {
-                showInfo = !showInfo;
-                toggleInfo();
-            }
+
+        Button resetCamBtn = new Button("摄像机归位");
+        resetCamBtn.setFontSize(20);
+        myWindow.addChild(resetCamBtn);
+        resetCamBtn.addClickCommands(source -> resetCam());
+
+        Button showInfoBtn = new Button("显示/隐藏 OpenGL 信息");
+        showInfoBtn.setFontSize(20);
+        myWindow.addChild(showInfoBtn);
+        showInfoBtn.addClickCommands(source -> {
+            showInfo = !showInfo;
+            toggleInfo();
         });
     }
 
@@ -161,14 +181,8 @@ public class Show3D extends SimpleApplication{
         return geometry;
     }
 
-    public Geometry putBox(Vector3f pos, float size, ColorRGBA color) {
-        Geometry geometry = this.putShape(new WireBox(size, size, size), color);
-        geometry.setLocalTranslation(pos);
-        return geometry;
-    }
-
     public Geometry putGrid(Vector3f pos, ColorRGBA color) {
-        Geometry geometry = this.putShape(new Grid(6, 6, 0.2F), color);
+        Geometry geometry = this.putShape(new Grid(16, 16, 0.2F), color);
         geometry.center().move(pos);
         return geometry;
     }
@@ -214,10 +228,13 @@ public class Show3D extends SimpleApplication{
             item3D.key = concept.getKey();
 
             Quad quad = new Quad(nodeWidth,nodeWidth);
-            Geometry g = new Geometry(opt+" "+item3D.key, quad);
-            g.setMaterial(matNode1);
-            g.setQueueBucket(RenderQueue.Bucket.Transparent);
-            item3D.geo = g;
+            Geometry g = new Geometry("g", quad);
+            g.setMaterial(matTerm);
+            g.setQueueBucket(renderQueue);
+            Node pivot = new Node(opt+" "+item3D.key);
+            pivot.attachChild(g);
+            g.setLocalTranslation(nodeWidth*-0.5f,nodeWidth*-0.5f,0);
+            item3D.geo = pivot;
             map.put(key,item3D);
         }
         Frame3D frame3D = new Frame3D();
@@ -235,11 +252,14 @@ public class Show3D extends SimpleApplication{
             item3D.item = task;
             item3D.key = task.getKey();
 
-            Quad quad = new Quad(nodeWidth,nodeWidth);
-            Geometry g = new Geometry(opt+" "+item3D.key, quad);
-            g.setMaterial(matNode1);
-            g.setQueueBucket(RenderQueue.Bucket.Transparent);
-            item3D.geo = g;
+            Quad quad = new Quad(taskWidth,taskWidth);
+            Geometry g = new Geometry("g", quad);
+            g.setMaterial(matTask);
+            g.setQueueBucket(renderQueue);
+            Node pivot = new Node(opt+" "+item3D.key);
+            pivot.attachChild(g);
+            g.setLocalTranslation(taskWidth*-0.5f,taskWidth*-0.5f,0);
+            item3D.geo = pivot;
             map.put(key,item3D);
         }
         Frame3D frame3D = new Frame3D();
@@ -249,22 +269,30 @@ public class Show3D extends SimpleApplication{
     }
 
     void addToRoot(Frame3D frame){
-        frame.item3d.geo.setLocalTranslation(0,0,((Double) Math.random()).floatValue());
-        frame.item3d.geo.addControl(new BillboardControl());
+
+        //todo: 根据抽象层级来设置具体位置而不是随机分布.
+        frame.item3d.geo.setLocalTranslation(FastMath.nextRandomFloat()*2f-1f,0.2f,FastMath.nextRandomFloat()*3f-1.5f);
+
+        BillboardControl billboardControl = new BillboardControl();
+        billboardControl.setAlignment(BillboardControl.Alignment.Camera);
+        frame.item3d.geo.addControl(billboardControl);
         this.rootNode.attachChild(frame.item3d.geo);
         list.add(frame);
-        System.out.println("add: "+frame.item3d.geo.getName());
     }
 
     @Override
     public void simpleUpdate(float tpf) {
         while (frameQueue.size()>0){
             Frame3D frame = frameQueue.remove(frameQueue.size() - 1);
-            addToRoot(frame);
+            if(frame!=null){
+                addToRoot(frame);
+            }
         }
         while (willRemove.size()>0){
             Item3D item3D = willRemove.remove(willRemove.size() - 1);
-            item3D.geo.removeFromParent();
+            if(item3D!=null){
+                item3D.geo.removeFromParent();
+            }
         }
         super.simpleUpdate(tpf);
     }

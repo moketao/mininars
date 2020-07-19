@@ -6,6 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/nars_core_java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/nars_gui" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/res" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/testsrc" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
