@@ -250,8 +250,8 @@ public class LocalRules {
      * <p>
      * called in MatchingRules
      *
-     * @param budget The budget value of the new task
-     * @param truth The truth value of the new task
+     * @param newTruth The truth value of the new task
+     * @param newBudget The budget value of the new task
      * @param memory Reference to the memory
      */
     private static void convertedJudgment(TruthValue newTruth, BudgetValue newBudget, Memory memory) {

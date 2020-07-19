@@ -47,7 +47,7 @@ public class ParameterWindow extends NarsFrame implements ActionListener, Adjust
      * Constructor
      * @param title Parameter name
      * @param dft The default value of the parameter
-     * @param value  
+     * @param currentValue
      */
     ParameterWindow(String title, int dft, AtomicInteger currentValue ) {
         super(title);

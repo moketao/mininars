@@ -330,7 +330,6 @@ public final class StructuralRules {
      * @param inh An Inheritance statement
      * @param oldContent The whole content
      * @param indices The indices of the TaskLink
-     * @param task The task
      * @param memory Reference to the memory
      */
     static void transformProductImage(Inheritance inh, CompoundTerm oldContent, short[] indices, Memory memory) {

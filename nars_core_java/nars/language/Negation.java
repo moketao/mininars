@@ -36,7 +36,6 @@ public class Negation extends CompoundTerm {
     /**
      * Constructor with partial values, called by make
      *
-     * @param n The name of the term
      * @param arg The component list of the term
      */
     private Negation(ArrayList<Term> arg) {
@@ -48,7 +47,6 @@ public class Negation extends CompoundTerm {
      *
      * @param n The name of the term
      * @param cs Component list
-     * @param open Open variable list
      * @param i Syntactic complexity of the compound
      */
     private Negation(String n, ArrayList<Term> cs, boolean con, short i) {

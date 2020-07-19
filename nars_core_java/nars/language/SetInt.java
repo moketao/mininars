@@ -35,7 +35,6 @@ public class SetInt extends CompoundTerm {
 
     /**
      * Constructor with partial values, called by make
-     * @param n The name of the term
      * @param arg The component list of the term
      */
     private SetInt(ArrayList<Term> arg) {
@@ -46,7 +45,6 @@ public class SetInt extends CompoundTerm {
      * constructor with full values, called by clone
      * @param n The name of the term
      * @param cs Component list
-     * @param open Open variable list
      * @param i Syntactic complexity of the compound
      */
     private SetInt(String n, ArrayList<Term> cs, boolean con, short i) {

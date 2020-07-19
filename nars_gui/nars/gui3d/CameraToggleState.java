@@ -18,10 +18,8 @@ public class CameraToggleState extends AbstractAppState {
         this.stateManager = stateManager;
         super.initialize(stateManager, app);
 
-        // Setup the input mappings configured in the constructor
         inputMapper = GuiGlobals.getInstance().getInputMapper();
 
-        // Map the space bar to our function
         inputMapper.map(F_CAMERA_TOGGLE, KeyInput.KEY_SPACE);
         inputMapper.addDelegate(F_CAMERA_TOGGLE, this, "toggleCamera");
     }

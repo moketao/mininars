@@ -55,7 +55,6 @@ public class ImageExt extends CompoundTerm {
      * Constructor with full values, called by clone
      * @param n The name of the term
      * @param cs Component list
-     * @param open Open variable list
      * @param complexity Syntactic complexity of the compound
      * @param index The index of relation in the component list
      */

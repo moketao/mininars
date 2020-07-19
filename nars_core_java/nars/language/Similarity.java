@@ -35,7 +35,6 @@ public class Similarity extends Statement {
 
     /**
      * Constructor with partial values, called by make
-     * @param n The name of the term
      * @param arg The component list of the term
      */
     private Similarity(ArrayList<Term> arg) {
@@ -46,7 +45,6 @@ public class Similarity extends Statement {
      * Constructor with full values, called by clone
      * @param n The name of the term
      * @param cs Component list
-     * @param open Open variable list
      * @param i Syntactic complexity of the compound
      */
     private Similarity(String n, ArrayList<Term> cs, boolean con, short i) {
