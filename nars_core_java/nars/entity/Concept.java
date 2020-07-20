@@ -157,11 +157,15 @@ public final class Concept extends Item {
         if (task.getBudget().aboveThreshold()) {
             for (Task ques : questions) {
 //                LocalRules.trySolution(ques.getSentence(), judg, ques, memory);
-                LocalRules.trySolution(judg, ques, memory);
+                boolean best = LocalRules.trySolution(judg, ques, memory);
+                if(!best){
+                    Show3D.inst().remove(task);
+                }
             }
             addToTable(judg, beliefs, Parameters.MAXIMUM_BELIEF_LENGTH);
+        }else{
+            Show3D.inst().remove(task);
         }
-        Show3D.inst().remove(task);
     }
 
     /**
