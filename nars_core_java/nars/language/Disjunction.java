@@ -30,12 +30,12 @@ import nars.storage.Memory;
 
 /** 
  * A disjunction of Statements.
+ * 分支 / 要么 A 要么 B, 二选一
  */
 public class Disjunction extends CompoundTerm {
 
     /**
      * Constructor with partial values, called by make
-     * 分支 / 要么 A 要么 B, 二选一
      * @param arg The component list of the term
      */
     private Disjunction(ArrayList<Term> arg) {
