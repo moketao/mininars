@@ -63,7 +63,7 @@ public final class BudgetFunctions extends UtilityFunctions {
     /**
      * Evaluate the quality of a belief as a solution to a problem, then reward
      * the belief and de-prioritize the problem
-     *
+     * 评估解决方案
      * @param problem The problem (question or goal) to be solved
      * @param solution The belief as solution
      * @param task The task to be immediately processed, or null for continued
@@ -98,7 +98,7 @@ public final class BudgetFunctions extends UtilityFunctions {
 
     /**
      * Evaluate the quality of a revision, then de-prioritize the premises
-     *
+     * 修订
      * @param tTruth The truth value of the judgment in the task
      * @param bTruth The truth value of the belief
      * @param truth The truth value of the conclusion of revision
@@ -157,15 +157,15 @@ public final class BudgetFunctions extends UtilityFunctions {
     /* ----------------------- Concept ----------------------- */
     /**
      * Activate a concept by an incoming TaskLink
-     *
+     * 领导来了, 各部门准备好, 准备接待.
      * @param concept The concept
      * @param budget The budget for the new item
      */
     public static void activate(Concept concept, BudgetValue budget) {
         float oldPri = concept.getPriority();
-        float priority = or(oldPri, budget.getPriority());
-        float durability = aveAri(concept.getDurability(), budget.getDurability());
-        float quality = concept.getQuality();
+        float priority = or(oldPri, budget.getPriority()); // 把领导的旨意记下 (增加优先级)
+        float durability = aveAri(concept.getDurability(), budget.getDurability()); // 时间先平均分配, 如果领导给的时间多, 那就做多, 如果少就做少.
+        float quality = concept.getQuality();// 重新评估一下我们机构的质量(当前概念的质量), 质量差的将来就等着被遗忘吧.
         concept.setPriority(priority);
         concept.setDurability(durability);
         concept.setQuality(quality);
@@ -180,7 +180,8 @@ public final class BudgetFunctions extends UtilityFunctions {
      * The intuitive meaning of the parameter "forgetRate" is: after this number
      * of times of access, priority 1 will become d, it is a system parameter
      * adjustable in run time.
-     *
+     * 遗忘
+     * 用过的 item 就降低优先级
      * @param budget The previous budget value
      * @param forgetRate The budget for the new item
      * @param relativeThreshold The relative threshold of the bag
