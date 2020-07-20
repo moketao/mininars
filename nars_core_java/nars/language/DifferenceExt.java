@@ -30,12 +30,12 @@ import nars.storage.Memory;
 
 /**
  * A compound term whose extension is the difference of the extensions of its components
+ * 实例差异集合 或 外延差异集合
  */
 public class DifferenceExt extends CompoundTerm {
 
     /**
      * Constructor with partial values, called by make
-     * @param n The name of the term
      * @param arg The component list of the term
      */
     private DifferenceExt(ArrayList<Term> arg) {
@@ -46,7 +46,6 @@ public class DifferenceExt extends CompoundTerm {
      * Constructor with full values, called by clone
      * @param n The name of the term
      * @param cs Component list
-     * @param open Open variable list
      * @param i Syntactic complexity of the compound
      */
     private DifferenceExt(String n, ArrayList<Term> cs, boolean con, short i) {

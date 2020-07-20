@@ -30,6 +30,7 @@ import nars.storage.Memory;
 
 /**
  * An intensionally defined set, which contains one or more instances defining the Term.
+ * 内涵集合, 包含一个或多个属性
  */
 public class SetInt extends CompoundTerm {
 

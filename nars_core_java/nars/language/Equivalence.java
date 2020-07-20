@@ -30,6 +30,7 @@ import nars.storage.Memory;
 
 /**
  * A Statement about an Equivalence relation.
+ * 全等
  */
 public class Equivalence extends Statement {
 

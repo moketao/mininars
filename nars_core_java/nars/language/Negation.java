@@ -30,6 +30,7 @@ import nars.storage.Memory;
 
 /**
  * A negation of a statement.
+ * 反向修饰/负/不
  */
 public class Negation extends CompoundTerm {
 
@@ -73,7 +74,7 @@ public class Negation extends CompoundTerm {
     public static Term make(Term t, Memory memory) {
         if (t instanceof Negation) {
             return ((CompoundTerm) t).cloneComponents().get(0);
-        }         // (--,(--,P)) = P
+        }         // (--,(--,P)) = P 负负得正
         ArrayList<Term> argument = new ArrayList<>();
         argument.add(t);
         return make(argument, memory);

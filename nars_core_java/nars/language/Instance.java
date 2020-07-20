@@ -27,6 +27,7 @@ import nars.storage.Memory;
 /**
  * A Statement about an Instance relation, which is used only in Narsese for I/O, 
  * and translated into Inheritance for internal use.
+ * 实例, 跟 (继承/是/Inheritance) 一回事.
  */
 public abstract class Instance extends Statement {
     

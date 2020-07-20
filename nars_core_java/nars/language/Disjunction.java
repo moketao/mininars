@@ -35,7 +35,7 @@ public class Disjunction extends CompoundTerm {
 
     /**
      * Constructor with partial values, called by make
-     * @param n The name of the term
+     * 分支 / 要么 A 要么 B, 二选一
      * @param arg The component list of the term
      */
     private Disjunction(ArrayList<Term> arg) {

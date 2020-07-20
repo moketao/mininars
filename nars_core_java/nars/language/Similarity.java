@@ -30,6 +30,7 @@ import nars.storage.Memory;
 
 /**
  * A Statement about a Similarity relation.
+ * 相似
  */
 public class Similarity extends Statement {
 

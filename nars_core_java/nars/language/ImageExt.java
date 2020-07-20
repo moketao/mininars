@@ -30,6 +30,7 @@ import nars.storage.Memory;
 
 /**
  * An extension image.
+ * 外延图
  * <p>
  * B --> (/,P,A,_)) iff (*,A,B) --> P
  * <p>

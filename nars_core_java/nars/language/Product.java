@@ -30,6 +30,7 @@ import nars.storage.Memory;
 
 /**
  * A Product is a sequence of terms.
+ * 对象与对象之间的关系/作用通道 . 把两个物体放在一起会发生什么
  */
 public class Product extends CompoundTerm {
     

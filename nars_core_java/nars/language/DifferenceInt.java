@@ -30,6 +30,7 @@ import nars.storage.Memory;
 
 /**
  * A compound term whose extension is the difference of the intensions of its components
+ * 属性差异集合 或 内涵差异集合.
  */
 public class DifferenceInt extends CompoundTerm {
 

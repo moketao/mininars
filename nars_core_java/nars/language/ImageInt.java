@@ -30,6 +30,7 @@ import nars.storage.Memory;
 
 /**
  * An intension image.
+ * 内涵图
  * <p>
  * (\,P,A,_)) --> B iff P --> (*,A,B)
  * <p>

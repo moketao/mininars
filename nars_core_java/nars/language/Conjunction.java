@@ -35,7 +35,7 @@ public class Conjunction extends CompoundTerm {
 
     /**
      * Constructor with partial values, called by make
-     *
+     * 并集 / 并行 / 可以同时发生
      * @param arg The component list of the term
      */
     protected Conjunction(ArrayList<Term> arg) {

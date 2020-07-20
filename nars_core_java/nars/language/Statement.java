@@ -31,6 +31,7 @@ import nars.storage.Memory;
 /**
  * A statement is a compound term, consisting of a subject, a predicate, and a
  * relation symbol in between. It can be of either first-order or higher-order.
+ * 句子
  */
 public abstract class Statement extends CompoundTerm {
 

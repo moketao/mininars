@@ -29,7 +29,8 @@ import nars.io.Symbols;
 import nars.storage.Memory;
 
 /**
- * A Statement about an Inheritance relation.
+ * A Statement about an Implication relation.
+ * 推导/引发/影响/导致/意味着
  */
 public class Implication extends Statement {
 

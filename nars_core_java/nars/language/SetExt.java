@@ -30,6 +30,7 @@ import nars.storage.Memory;
 
 /**
  * An extensionally defined set, which contains one or more instances.
+ * 外延集合, 包含一个或多个实例.
  */
 public class SetExt extends CompoundTerm {
 

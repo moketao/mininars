@@ -30,6 +30,7 @@ import nars.storage.Memory;
 
 /**
  * A compound term whose intension is the intersection of the extensions of its components
+ * 内涵交集/属性交集
  */
 public class IntersectionInt extends CompoundTerm {
 

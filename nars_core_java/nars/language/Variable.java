@@ -30,6 +30,7 @@ import nars.storage.Memory;
 
 /**
  * A variable term, which does not correspond to a concept
+ * 变量
  */
 public class Variable extends Term {
     /**

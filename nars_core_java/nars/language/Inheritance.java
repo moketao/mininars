@@ -30,6 +30,8 @@ import nars.storage.Memory;
 
 /**
  * A Statement about an Inheritance relation.
+ * 继承/是
+ * 例子: A-->B    A是B, A是B的实例, B是A的属性
  */
 public class Inheritance extends Statement {
 

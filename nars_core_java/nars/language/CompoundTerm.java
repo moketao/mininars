@@ -33,6 +33,7 @@ import static nars.language.CompoundTerm.makeCompoundName;
 
 /**
  * A CompoundTerm is a Term with internal (syntactic) structure
+ * 复合词项(由多个词项组合而成)
  * <p>
  * A CompoundTerm consists of a term operator with one or more component Terms.
  * <p>

@@ -28,6 +28,7 @@ import nars.storage.Memory;
 /**
  * A Statement about a Property relation, which is used only in Narsese for I/O, 
  * and translated into Inheritance for internal use.
+ * 属性,继承的一种特殊写法,只用在系统中.
  */
 public abstract class Property extends Statement {
     

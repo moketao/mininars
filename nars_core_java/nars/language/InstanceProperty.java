@@ -28,6 +28,7 @@ import nars.storage.Memory;
 /**
  * A Statement about an InstanceProperty relation, which is used only in Narsese for I/O, 
  * and translated into Inheritance for internal use.
+ * 跟 (继承/是/Inheritance) 一回事,只在系统中使用.
  */
 public abstract class InstanceProperty extends Statement {
     
