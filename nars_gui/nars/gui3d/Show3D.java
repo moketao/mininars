@@ -19,16 +19,17 @@ import com.jme3.scene.Node;
 import com.jme3.scene.control.BillboardControl;
 import com.jme3.scene.debug.Arrow;
 import com.jme3.scene.debug.Grid;
-import com.jme3.scene.debug.WireBox;
 import com.jme3.scene.shape.Line;
 import com.jme3.scene.shape.Quad;
 import com.jme3.system.AppSettings;
 import com.jme3.texture.Texture;
 import com.simsilica.lemur.*;
 import com.simsilica.lemur.style.BaseStyles;
-import nars.entity.Concept;
-import nars.entity.Item;
-import nars.entity.Task;
+import nars.entity.*;
+import nars.language.Inheritance;
+import nars.language.Term;
+import nars.main_nogui.ReasonerBatch;
+import nars.storage.Memory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,12 +38,15 @@ public class Show3D extends SimpleApplication{
     public static final String INSERT_CONCEPT = "insert concept"; //生成概念/插入概念
     public static final String INSERT_TASK = "insert task"; //生成任务/插入任务
     public static final String DERIVED = "derived task"; //衍生任务/分解任务
+    public static final String UPDATE_CONCEPT_Y = "update concept Y"; //更新概念的高度
     private static FlyCamAppState flyCamAppState;
+    private ReasonerBatch reasoner;
     private Material mat;
     private BitmapFont myFont;
     private HashMap<Integer, Item3D> map = new HashMap<>();
     private ArrayList<Frame3D> list = new ArrayList<>();
     private ArrayList<Frame3D> frameQueue = new ArrayList<>();
+    private ArrayList<Frame3D> moveQueue = new ArrayList<>();
     private boolean showInfo = false;
     private Material matTerm;
     private Material matTask;
@@ -51,14 +55,17 @@ public class Show3D extends SimpleApplication{
     private boolean online = true;
     private ArrayList<Item3D> willRemove = new ArrayList<>();
     private RenderQueue.Bucket renderQueue;
+    private Memory memory;
 
     Show3D(AppState... initialStates){
         super(initialStates);
     }
     static Show3D app;
-    public static void main(String[] args) {
+    public static void init(ReasonerBatch reasoner) {
         flyCamAppState = new FlyCamAppState();
         app = new Show3D(new StatsAppState(), flyCamAppState ,new DebugKeysAppState(), new ConstantVerifierState());
+        app.reasoner = reasoner;
+        app.memory = reasoner.getMemory();
 
         AppSettings setting= new AppSettings(true);
         setting.setResizable(true);
@@ -194,6 +201,7 @@ public class Show3D extends SimpleApplication{
     }
 
     public void append(String opt, Item item) {
+        if(item==null) return;
         if(!online) return;
         Frame3D frame = null;
         if(item instanceof Task){
@@ -294,6 +302,55 @@ public class Show3D extends SimpleApplication{
                 item3D.geo.removeFromParent();
             }
         }
+        while (moveQueue.size()>0){
+            Frame3D frame = moveQueue.remove(moveQueue.size() - 1);
+            if(frame!=null && frame.item3d!=null && frame.item3d.geo!=null){
+                frame.item3d.geo.setLocalTranslation(frame.endPos.x,frame.endPos.y,frame.endPos.z); // todo: 动画
+            }
+        }
         super.simpleUpdate(tpf);
+    }
+
+    public void move(Task task) {
+        Sentence parentBelief = task.getParentBelief();
+        Task parentTask = task.getParentTask();
+        boolean isA = parentBelief.getContent() instanceof Inheritance;
+        boolean isB = parentTask.getSentence().getContent() instanceof Inheritance;
+        boolean isA2B = task.getSentence().getContent() instanceof Inheritance;
+        if( isA && isB && isA2B){                                                                   // 针对下面的逻辑,举个例: 乌鸦是鸟, 鸟是动物
+            Inheritance A = (Inheritance) parentBelief.getContent();
+            moveOneConcept(A.getSubject(), A.getPredicate(),parentBelief.getTruth() );              // 鸟被推动一次
+
+            Inheritance B = (Inheritance) parentTask.getSentence().getContent();
+            moveOneConcept(B.getSubject(), B.getPredicate(),parentTask.getSentence().getTruth() );  // 动物被推动一次
+
+            Inheritance B2 = (Inheritance) task.getSentence().getContent();
+            moveOneConcept(B2.getSubject(), B2.getPredicate(),task.getSentence().getTruth() );      // 因为 task 推出 '乌鸦是动物', 所以动物的高度会被继续推高一次
+        }
+    }
+
+    private void moveOneConcept(Term push,Term target, TruthValue truth) {
+        if(truth.getConfidence()<0.5){
+            return;                                                 // 信心不足就不推了, todo: 或者有更好的计算方式?
+        }
+        Concept concept = memory.getConcept(target);
+        Item3D item3D2 = map.get(concept.hashCode());               // todo: 需要判断 item3D2 中的 item 是否是 c2 ?
+
+        HashMap<String, Float> valForHeight = item3D2.valForHeight; // 推高的力量集 (来自其它 concept )
+        String key = memory.getConcept(push).getKey();              // 推者的 key
+        valForHeight.put(key,truth.getExpectation());               // 记录当前信仰的推力
+
+        Float sum = 0f;                                             // 推力汇总 , todo: 是否要用到 UtilityFunctions.aveGeo ?
+        for(Float f : valForHeight.values())
+        {
+            sum+=f;
+        }
+        Frame3D frame3D = new Frame3D();
+        frame3D.item3d = item3D2;
+        frame3D.opt = UPDATE_CONCEPT_Y;                                             // 标注这次的操作是: 更新高度
+        Vector3f localTranslation = frame3D.item3d.geo.getLocalTranslation();       // 当前位置
+        frame3D.startPos = localTranslation;
+        frame3D.endPos = new Vector3f(localTranslation.x, sum ,localTranslation.z); // 将要移动到的位置
+        moveQueue.add(frame3D);
     }
 }

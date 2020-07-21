@@ -13,7 +13,7 @@ public class Item3D {
     public ItemTYPE type;
     public String key;
     public Node geo;
-    public HashMap<String, TruthValue> valForHeight = new HashMap<>();
+    public HashMap<String, Float> valForHeight = new HashMap<>();
 
     public enum ItemTYPE {
         Concept, Task

@@ -221,9 +221,10 @@ public class Memory {
         Concept concept = concepts.get(n);
         if (concept == null) {
             concept = new Concept(term, this); // the only place to make a new Concept
-            Show3D.inst().append(INSERT_CONCEPT,concept);
             boolean created = concepts.putIn(concept);
-            if (!created) {
+            if (created) {
+                Show3D.inst().append(INSERT_CONCEPT, concept);
+            }else{
                 return null;
             }
         }
@@ -315,6 +316,7 @@ public class Memory {
             float minSilent = reasoner.getSilenceValue().get() / 100.0f;
             if (budget > minSilent) {  // only report significant derived Tasks
                 report(task.getSentence(), false);
+                Show3D.inst().move(task);
             }
             newTasks.add(task);
         } else {
@@ -475,7 +477,7 @@ public class Memory {
         currentTask = task; // one of the two places where this variable is set
         recorder.append("!!! Insert: " + task + "\n");
         currentTerm = task.getContent();
-        currentConcept = getConcept(currentTerm);
+        currentConcept = getConcept(currentTerm); // getConcept 里包含有一个 new concept 的操作, 还有一个对应的 show3d 记录操作(insert concept).
         if (currentConcept != null) {
             Show3D.inst().append(INSERT_TASK,task);
             activateConcept(currentConcept, task.getBudget());

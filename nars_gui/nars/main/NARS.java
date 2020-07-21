@@ -69,7 +69,7 @@ public class NARS implements Runnable {
         nars.init(args);
         nars.start();
 
-        Show3D.main(null);
+        Show3D.init(nars.reasoner);
     }
 
     /**
