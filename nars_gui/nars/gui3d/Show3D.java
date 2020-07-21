@@ -27,6 +27,9 @@ import com.jme3.scene.shape.Sphere;
 import com.jme3.system.AppSettings;
 import com.jme3.texture.Texture;
 import com.simsilica.lemur.*;
+import com.simsilica.lemur.Button;
+import com.simsilica.lemur.Container;
+import com.simsilica.lemur.Label;
 import com.simsilica.lemur.style.BaseStyles;
 import nars.entity.*;
 import nars.language.Inheritance;
@@ -34,6 +37,7 @@ import nars.language.Term;
 import nars.main_nogui.ReasonerBatch;
 import nars.storage.Memory;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -60,6 +64,7 @@ public class Show3D extends SimpleApplication{
     private RenderQueue.Bucket renderQueue;
     private Memory memory;
     Label selLabel;
+    private int updateTextDelay = 0;
     private Geometry mark;
 
     Show3D(AppState... initialStates){
@@ -75,6 +80,7 @@ public class Show3D extends SimpleApplication{
         AppSettings setting= new AppSettings(true);
         setting.setResizable(true);
         setting.setTitle("3d Win");
+        setting.setWidth(1024);
         setting.setVSync(false);
         app.setSettings(setting);
         app.showSettings = false;
@@ -110,13 +116,6 @@ public class Show3D extends SimpleApplication{
         mat.getAdditionalRenderState().setWireframe(true);
         mat.getAdditionalRenderState().setLineWidth(1.0F);
     }
-    protected void initMark() {
-        Sphere sphere = new Sphere(30, 30, 0.2f);
-        mark = new Geometry("BOOM!", sphere);
-        Material mark_mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        mark_mat.setColor("Color", ColorRGBA.Red);
-        mark.setMaterial(mark_mat);
-    }
     private void init3D() {
         app.settings.setTitle("3d win");
         flyCamAppState.getCamera().setDragToRotate(true);
@@ -126,7 +125,6 @@ public class Show3D extends SimpleApplication{
         this.cam.setFrustumPerspective(45f, 1f, 0.1f, 1000f);
         this.lostFocusBehavior = LostFocusBehavior.Disabled;
         resetCam();
-        initMark();
         Line line = new Line(new Vector3f(0, 2.5f, 0.0f), new Vector3f(0f, 1.5f, 0f));
         Geometry geomLine = new Geometry("Line", line);
         geomLine.setMaterial(this.mat);
@@ -145,16 +143,17 @@ public class Show3D extends SimpleApplication{
         public void onAction(String binding, boolean keyPressed, float tpf) {
             if (binding.equals("clickItem3D") && !keyPressed) {
                 CollisionResults results = new CollisionResults();
-                Ray ray = new Ray(cam.getLocation(), cam.getDirection());
+                Vector3f origin    = cam.getWorldCoordinates(inputManager.getCursorPosition(), 0.0f);
+                Vector3f direction = cam.getWorldCoordinates(inputManager.getCursorPosition(), 0.3f);
+                direction.subtractLocal(origin).normalizeLocal();
+                Ray ray = new Ray(origin, direction);
                 rootNode.collideWith(ray, results);
                 if (results.size() > 0) {
                     CollisionResult closest = results.getClosestCollision();
                     Node parent = closest.getGeometry().getParent();
-                    selLabel.setText(parent.getName()); // todo: 排查 ray 碰撞检测错误
-                    //mark.setLocalTranslation(closest.getContactPoint());
-                    //rootNode.attachChild(mark);
-                }else{
-                    //rootNode.detachChild(mark);
+                    selLabel.setText(parent.getName());
+                    selLabel.center().move(settings.getWidth()*0.5f,28,0);
+                    updateTextDelay = 5;
                 }
             }
         }
@@ -202,8 +201,11 @@ public class Show3D extends SimpleApplication{
         });
 
         selLabel = new Label("当前未选中节点");
-        selLabel.setFontSize(15);
-        myWindow.addChild(selLabel);
+        selLabel.setFontSize(25);
+        selLabel.setTextHAlignment(HAlignment.Center);
+        selLabel.setTextVAlignment(VAlignment.Center);
+        guiNode.attachChild(selLabel);
+        updateTextDelay = 5;
     }
 
     private void toggleInfo() {
@@ -328,6 +330,12 @@ public class Show3D extends SimpleApplication{
 
     @Override
     public void simpleUpdate(float tpf) {
+        if(updateTextDelay>0){
+            updateTextDelay -= 1;
+            if(updateTextDelay<=0){
+                selLabel.center().move(settings.getWidth()*0.5f,28,0);
+            }
+        }
         while (frameQueue.size()>0){
             Frame3D frame = frameQueue.remove(frameQueue.size() - 1);
             if(frame!=null){
@@ -368,15 +376,18 @@ public class Show3D extends SimpleApplication{
     }
 
     private void moveOneConcept(Term push,Term target, TruthValue truth) {
+        Float baseY;
         if(truth.getConfidence()<0.5){
-            return;                                                 // 信心不足就不推了, todo: 或者有更好的计算方式?
+            baseY = 1f;                                             // 信心不足就不推了, 只给基础高度 1, todo: 或者有更好的计算方式?
+        }else{
+            baseY = 1f + truth.getExpectation();                    // 基础高度 + 经验高度
         }
         Concept concept = memory.getConcept(target);
         Item3D item3D2 = map.get(concept.hashCode());               // todo: 需要判断 item3D2 中的 item 是否是 c2 ?
 
         HashMap<String, Float> valForHeight = item3D2.valForHeight; // 推高的力量集 (来自其它 concept )
         String key = memory.getConcept(push).getKey();              // 推者的 key
-        valForHeight.put(key,truth.getExpectation());               // 记录当前信仰的推力
+        valForHeight.put(key,baseY);                                // 记录当前信仰的推力
 
         Float sum = 0f;                                             // 推力汇总 , todo: 是否要用到 UtilityFunctions.aveGeo ?
         for(Float f : valForHeight.values())
