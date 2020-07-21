@@ -3,15 +3,17 @@ package nars.gui3d;
 import com.jme3.app.*;
 import com.jme3.app.state.AppState;
 import com.jme3.app.state.ConstantVerifierState;
+import com.jme3.collision.CollisionResult;
+import com.jme3.collision.CollisionResults;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.font.Rectangle;
+import com.jme3.input.MouseInput;
+import com.jme3.input.controls.ActionListener;
+import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState;
-import com.jme3.math.ColorRGBA;
-import com.jme3.math.FastMath;
-import com.jme3.math.Quaternion;
-import com.jme3.math.Vector3f;
+import com.jme3.math.*;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
@@ -21,6 +23,7 @@ import com.jme3.scene.debug.Arrow;
 import com.jme3.scene.debug.Grid;
 import com.jme3.scene.shape.Line;
 import com.jme3.scene.shape.Quad;
+import com.jme3.scene.shape.Sphere;
 import com.jme3.system.AppSettings;
 import com.jme3.texture.Texture;
 import com.simsilica.lemur.*;
@@ -56,6 +59,8 @@ public class Show3D extends SimpleApplication{
     private ArrayList<Item3D> willRemove = new ArrayList<>();
     private RenderQueue.Bucket renderQueue;
     private Memory memory;
+    Label selLabel;
+    private Geometry mark;
 
     Show3D(AppState... initialStates){
         super(initialStates);
@@ -105,7 +110,13 @@ public class Show3D extends SimpleApplication{
         mat.getAdditionalRenderState().setWireframe(true);
         mat.getAdditionalRenderState().setLineWidth(1.0F);
     }
-
+    protected void initMark() {
+        Sphere sphere = new Sphere(30, 30, 0.2f);
+        mark = new Geometry("BOOM!", sphere);
+        Material mark_mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        mark_mat.setColor("Color", ColorRGBA.Red);
+        mark.setMaterial(mark_mat);
+    }
     private void init3D() {
         app.settings.setTitle("3d win");
         flyCamAppState.getCamera().setDragToRotate(true);
@@ -115,6 +126,7 @@ public class Show3D extends SimpleApplication{
         this.cam.setFrustumPerspective(45f, 1f, 0.1f, 1000f);
         this.lostFocusBehavior = LostFocusBehavior.Disabled;
         resetCam();
+        initMark();
         Line line = new Line(new Vector3f(0, 2.5f, 0.0f), new Vector3f(0f, 1.5f, 0f));
         Geometry geomLine = new Geometry("Line", line);
         geomLine.setMaterial(this.mat);
@@ -124,7 +136,29 @@ public class Show3D extends SimpleApplication{
         this.putArrow(Vector3f.ZERO, Vector3f.UNIT_Z, ColorRGBA.Blue);
         this.putGrid(new Vector3f(0F, 0.0F, 0.0F), ColorRGBA.DarkGray);
         createTxt3d();
+
+        inputManager.addMapping("clickItem3D", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
+        inputManager.addListener(actionListener, "clickItem3D");
     }
+    private ActionListener actionListener = new ActionListener() {
+
+        public void onAction(String binding, boolean keyPressed, float tpf) {
+            if (binding.equals("clickItem3D") && !keyPressed) {
+                CollisionResults results = new CollisionResults();
+                Ray ray = new Ray(cam.getLocation(), cam.getDirection());
+                rootNode.collideWith(ray, results);
+                if (results.size() > 0) {
+                    CollisionResult closest = results.getClosestCollision();
+                    Node parent = closest.getGeometry().getParent();
+                    selLabel.setText(parent.getName()); // todo: 排查 ray 碰撞检测错误
+                    //mark.setLocalTranslation(closest.getContactPoint());
+                    //rootNode.attachChild(mark);
+                }else{
+                    //rootNode.detachChild(mark);
+                }
+            }
+        }
+    };
 
     private void resetCam() {
         this.cam.setLocation(new Vector3f(5.5826545F, 3.6192513F, 8.016988F));
@@ -150,7 +184,7 @@ public class Show3D extends SimpleApplication{
         Container myWindow = new Container();
         guiNode.attachChild(myWindow);
         myWindow.setLocalTranslation(1, settings.getHeight()-1, 0);
-        Label txt = new Label(" 设置 ");
+        Label txt = new Label("设置: ");
         txt.setFontSize(15);
         myWindow.addChild(txt);
 
@@ -166,6 +200,10 @@ public class Show3D extends SimpleApplication{
             showInfo = !showInfo;
             toggleInfo();
         });
+
+        selLabel = new Label("当前未选中节点");
+        selLabel.setFontSize(15);
+        myWindow.addChild(selLabel);
     }
 
     private void toggleInfo() {
