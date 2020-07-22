@@ -28,15 +28,16 @@ package nars.main_nogui;
  */
 public class Parameters {
 
-    /* ---------- initial values of run-time adjustable parameters ---------- */
+    /* ---------- initial values of run-time adjustable parameters 运行时调参, 值越大遗忘越少 ---------- */
     /** Concept decay rate in ConceptBag, in [1, 99]. */
     public static final int CONCEPT_FORGETTING_CYCLE = 10;
     /** TaskLink decay rate in TaskLinkBag, in [1, 99]. */
     public static final int TASK_LINK_FORGETTING_CYCLE = 20;
     /** TermLink decay rate in TermLinkBag, in [1, 99]. */
     public static final int TERM_LINK_FORGETTING_CYCLE = 50;
+
     /** Silent threshold for task reporting, in [0, 100]. */
-    public static final int SILENT_LEVEL = 0;
+    public static final int SILENT_LEVEL = 0; // 高于这个值才输出打印.
 
     /* ---------- time management ---------- */
     /** Task decay rate in TaskBuffer, in [1, 99]. */

@@ -29,23 +29,33 @@ import nars.main_nogui.Parameters;
 
 /**
  * A triple of priority (current), durability (decay), and quality (long-term average).
+ * 预算值, 评估某个 item 所获得的计算资源的多少的时候, 需要用到这个值.
+ * 这个值包含三个评价维度: 优先度(当前/此时的),  持久度 (稍后/持续的),  质量 (长期平均值).
  */
 public class BudgetValue implements Cloneable {
 
-    /** The character that marks the two ends of a budget value */
+    /**
+     * The character that marks the two ends of a budget value 使用 $ 作为预算值的起始符号 */
     private static final char MARK = Symbols.BUDGET_VALUE_MARK;
-    /** The character that separates the factors in a budget value */
+    /** The character that separates the factors in a budget value 使用 ; 作为预算值内部因子之间的分割符 */
     private static final char SEPARATOR = Symbols.VALUE_SEPARATOR;
-    /** The relative share of time resource to be allocated */
+
+    /** The relative share of time resource to be allocated 有限度越高, 获得的计算时长(线程时长)就越长*/
     protected ShortFloat priority;
+
 	/**
 	 * The percent of priority to be kept in a constant period; All priority
 	 * values “decay” over time, though at different rates. Each item is given a
 	 * “durability” factor in (0, 1) to specify the percentage of priority level
 	 * left after each reevaluation
+     * 一个百分比, 决定下一波 优先级(priority) 能保留多少.
 	 */
     protected ShortFloat durability;
-    /** The overall (context-independent) evaluation */
+
+    /**
+     * The overall (context-independent) evaluation
+     * 跟当前环境无关的一个值, 这个值可上逆到主任务/根任务, 或者由研究人员在分配任务时指定.
+     */
     protected ShortFloat quality;
 
     /** 

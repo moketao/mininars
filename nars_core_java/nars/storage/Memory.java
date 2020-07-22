@@ -55,29 +55,42 @@ public class Memory {
      */
     private final ReasonerBatch reasoner;
 
-    /* ---------- Long-term storage for multiple cycles ---------- */
+
+
+    /* ---------- Long-term storage for multiple cycles 长期任务, 跨越多个循环的任务 ---------- */
     /**
      * Concept bag. Containing all Concepts of the system
+     * 记忆中所有的概念集合. 如果 newTasks 中没有任务, 会在这里激发新任务.
      */
     private final ConceptBag concepts;
     /**
      * New tasks with novel composed terms, for delayed and selective processing
+     * 新奇的经验缓冲区(由新的概念组合所标识的任务), 值得长时间研究的任务(当然也有淘汰,因为有 Bag 上限),
+     * 这里通常是 nars 自己探索得来的经验值较高的任务, 不是研究员直接分配的任务.
+     * 如果 newTasks 里没有任务, 意味着上一轮的没有任务遗留或已经处理完了, 则会自动从 novelTasks 中挑选任务.
      */
-    private final NovelTaskBag novelTasks;
-    /**
-     * Inference record text to be written into a log file
-     */
-    private IInferenceRecorder recorder;
-    private final AtomicInteger beliefForgettingRate = new AtomicInteger(Parameters.TERM_LINK_FORGETTING_CYCLE);
-    private final AtomicInteger taskForgettingRate = new AtomicInteger(Parameters.TASK_LINK_FORGETTING_CYCLE);
-    private final AtomicInteger conceptForgettingRate = new AtomicInteger(Parameters.CONCEPT_FORGETTING_CYCLE);
+    private final NovelTaskBag novelTasks; // 新概念,新任务,往往是由小任务组合而成,不紧急,但值得探索. (如: 学习, 探索)
 
-    /* ---------- Short-term workspace for a single cycle ---------- */
+
+
+
+    /* ---------- Short-term workspace for a single cycle 短期触发的任务 ---------- */
     /**
-     * List of new tasks accumulated in one cycle, to be processed in the next
-     * cycle
+     * List of new tasks accumulated in one cycle, to be processed in the next cycle
+     * 本次循环积累的短时任务, 会在下个循环中处理 (也可以反过来说: 上次循环积累的短时任务, 需要在本次循环中处理).
      */
-    private final LinkedList<Task> newTasks;
+    private final LinkedList<Task> newTasks; // 旧任务/输入任务/紧急任务. (如: 骑车,拿筷子,咀嚼,翻书,躲避危险,接受命令/任务)
+
+
+
+
+    /** Inference record text to be written into a log file */
+    private IInferenceRecorder recorder;
+
+    /** 下面是三个原子整数, 本质上就是整数, 用于在 UI 线程和 推理线程 之间共享参数 */
+    private final AtomicInteger beliefForgettingRate = new AtomicInteger(Parameters.TERM_LINK_FORGETTING_CYCLE); // 知识(信仰)遗忘率
+    private final AtomicInteger taskForgettingRate = new AtomicInteger(Parameters.TASK_LINK_FORGETTING_CYCLE);   // 任务遗忘率
+    private final AtomicInteger conceptForgettingRate = new AtomicInteger(Parameters.CONCEPT_FORGETTING_CYCLE);  // 概念遗忘率
     /**
      * List of Strings or Tasks to be sent to the output channels
      */
@@ -272,7 +285,8 @@ public class Memory {
         if (task.getBudget().aboveThreshold()) {
             recorder.append("!!! Perceived: " + task + "\n");
             report(task.getSentence(), true);    // report input
-            newTasks.add(task);       // wait to be processed in the next workCycle
+            newTasks.add(task);       // wait to be processed in the next workCycle // 等到下一个循环再做处理
+            // 上面这里或许可以改成 novelTasks.putIn(task) ? 或者合并 novelTasks 和 newTasks ?
         } else {
             recorder.append("!!! Neglected: " + task + "\n");
             Show3D.inst().remove(task);
@@ -401,41 +415,51 @@ public class Memory {
     /**
      * An atomic working cycle of the system: process new Tasks, then fire a
      * concept <p> Called from Reasoner.tick only
-     *
+     * 单次思考循环, 完成累积任务, 并激发新任务.
      * @param clock The current time to be displayed
      */
     public void workCycle(long clock) {
         recorder.append(" --- " + clock + " ---\n");
-        processNewTask();
-        if (noResult()) {       // necessary?
-            processNovelTask();
+        processNewTask();       // 处理上一个循环遗留下来的紧急/短时任务.                        (例: 骑车)
+        if (noResult()) {
+            processNovelTask(); // 如果下一轮空闲, 则启动分支高经验值长时任务做一做吧. 总不能闲着. (例: 学习)
         }
-        if (noResult()) {       // necessary?
-            processConcept();
+        if (noResult()) {
+            processConcept();   // 如果下一轮空闲, 随机地激发某个概念做推理.                      (例: 白日梦)
         }
-        novelTasks.refresh();
+        novelTasks.refresh();   // 让侦听器更新 UI.
     }
 
     /**
      * Process the newTasks accumulated in the previous workCycle, accept input
      * ones and those that corresponding to existing concepts, plus one from the
      * buffer.
+     * 处理上一个循环中在 newTasks (紧急任务) 中累积的任务, 如果是用户输入的概念或者旧概念, 则立即处理,
+     * 如果存在新概念, 则放到长期缓冲区 novelTasks (不紧急/但重要), 等待下一个循环, 在 processNovelTask 中处理.
+     * 所有过程都可能会向 newTasks 中加入新任务(输入概念或已知概念).  novelTasks 只针对新概念.
      */
     private void processNewTask() {
         Task task;
-        int counter = newTasks.size();  // don't include new tasks produced in the current workCycle
-        while (counter-- > 0) {
+
+        // don't include new tasks produced in the current workCycle
+        // 不处理本次循环中产生的任务, 而是处理上一轮循环中产生的新任务.
+        int counter = newTasks.size();
+
+        while (counter-- > 0) {//只要任务量大于0 , 就处理, 然后打钩.
             task = newTasks.removeFirst();
-            if (task.isInput() || (termToConcept(task.getContent()) != null)) { // new input or existing concept
+            if (task.isInput() || (termToConcept(task.getContent()) != null)) {
+                // new input or existing concept
+                // 如果是输入任务, 或已有对应的旧概念, 则立即处理
                 immediateProcess(task);
             } else {
+                // 如果不是用户输入的新概念, 但确实是之前没有的概念, 那么:
                 Sentence s = task.getSentence();
                 if (s.isJudgment()) {
                     double d = s.getTruth().getExpectation();
-                    if (d > Parameters.DEFAULT_CREATION_EXPECTATION) {
-                        novelTasks.putIn(task);    // new concept formation
+                    if (d > Parameters.DEFAULT_CREATION_EXPECTATION) {  // 经验够格才会新建新任务和概念
+                        novelTasks.putIn(task);    // new concept formation 新任务/概念被加入 Bag, 等待稍后的处理
                     } else {
-                        recorder.append("!!! Neglected: " + task + "\n");
+                        recorder.append("!!! Neglected: " + task + "\n");// 经验值不够则遗忘此任务
                         Show3D.inst().remove(task);
                     }
                 }

@@ -43,10 +43,12 @@ import nars.storage.TermLinkBag;
 /**
  * A concept contains information associated with a term, including directly and
  * indirectly related tasks and beliefs.
+ * 任务 和 知识(信仰) 的结合体.   用 term 作为 key 来标注它的唯一性.
  * <p>
  * To make sure the space will be released, the only allowed reference to a
  * concept are those in a ConceptBag. All other access go through the Term that
  * names the concept.
+ * 为了确保 遗忘机能 的正常运作, 只允许通过 概念袋( ConceptBag) 来访问某个具体的概念, 取概念的时候需提供对应的 name/term/key.
  */
 public final class Concept extends Item {
 
@@ -110,6 +112,7 @@ public final class Concept extends Item {
      * Directly process a new task. Called exactly once on each task. Using
      * local information and finishing in a constant time. Provide feedback in
      * the taskBudget value of the task.
+     * 分门别类地处理任务: 判断, 问题, 链接
      * <p>
      * called in Memory.immediateProcess only
      *
@@ -121,10 +124,10 @@ public final class Concept extends Item {
         } else {
             processQuestion(task);
         }
-        if (task.getBudget().aboveThreshold()) {    // still need to be processed
+        if (task.getBudget().aboveThreshold()) { // still need to be processed 如果这个帅小伙耐力还不错, 何不把他骗到碗里来.
             linkToTask(task);
         }
-        entityObserver.refresh(displayContent());
+        entityObserver.refresh(displayContent());// UI , 轮到你更新了
     }
 
     /**
