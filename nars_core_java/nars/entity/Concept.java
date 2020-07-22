@@ -65,8 +65,9 @@ public final class Concept extends Item {
      */
     private final TermLinkBag termLinks;
     /**
-     * Link templates of TermLink, only in concepts with CompoundTerm jmv TODO
-     * explain more
+     * Link templates of TermLink, only in concepts with CompoundTerm Templates
+     * are used to improve the efficiency of TermLink building
+     * termlink 模板, 提高 构建 termlink 的效率.
      */
     private ArrayList<TermLink> termLinkTemplates;
     /**
@@ -112,9 +113,10 @@ public final class Concept extends Item {
      * Directly process a new task. Called exactly once on each task. Using
      * local information and finishing in a constant time. Provide feedback in
      * the taskBudget value of the task.
-     * 分门别类地处理任务: 判断, 问题, 链接
+     * 分门别类地处理任务: 判断, 问题, 链接 (挑选预算值较高的 task 进行链接)
      * <p>
      * called in Memory.immediateProcess only
+     * 此函数只在 Memory.immediateProcess 中调用.
      *
      * @param task The task to be processed
      */
@@ -148,18 +150,17 @@ public final class Concept extends Item {
                     task.getBudget().decPriority(0);    // duplicated task
                 }   // else: activated belief
                 Show3D.inst().remove(task);
-                return;
-            } else if (LocalRules.revisible(judg, oldBelief)) {
+                return;// 如果时间差不多, 则说明重复了, 跳过, 不处理
+            } else if (LocalRules.revisible(judg, oldBelief)) {//如果可以修订
                 memory.newStamp = Stamp.make(newStamp, oldStamp, memory.getTime());
                 if (memory.newStamp != null) {
                     memory.currentBelief = oldBelief;
-                    LocalRules.revision(judg, oldBelief, false, memory);
+                    LocalRules.revision(judg, oldBelief, false, memory);//则修订
                 }
             }
         }
         if (task.getBudget().aboveThreshold()) {
             for (Task ques : questions) {
-//                LocalRules.trySolution(ques.getSentence(), judg, ques, memory);
                 boolean best = LocalRules.trySolution(judg, ques, memory);
                 if(!best){
                     Show3D.inst().remove(task);
