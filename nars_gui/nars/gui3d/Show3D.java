@@ -58,6 +58,7 @@ public class Show3D extends SimpleApplication{
     Label selLabel;
     private int updateTextDelay = 0;
     private Geometry mark;
+    private FloatTxt3d floatTxt3d;
 
     Show3D(AppState... initialStates){
         super(initialStates);
@@ -121,6 +122,7 @@ public class Show3D extends SimpleApplication{
         MiniUtil.putArrow(Vector3f.ZERO, Vector3f.UNIT_Z, matBlue);
         MiniUtil.putGrid(new Vector3f(0F, 0.0F, 0.0F), matDarkGray);
         createTxt3d();
+        createFloatTxt3d();
 
         inputManager.addMapping("clickItem3D", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
         inputManager.addListener(actionListener, "clickItem3D");
@@ -141,6 +143,7 @@ public class Show3D extends SimpleApplication{
                     selLabel.setText(parent.getName());
                     selLabel.center().move(settings.getWidth()*0.5f,28,0);
                     updateTextDelay = 5;
+                    floatTxt3d.setText(parent.getName(),parent);
                 }
             }
         }
@@ -157,6 +160,10 @@ public class Show3D extends SimpleApplication{
         BitmapText txt = MiniUtil.create3dtxt(myFont, "WASD移动摄像机\n拖拽左键可旋转摄像机");
         txt.setLocalTranslation(0,2f,-6f);
         this.rootNode.attachChild(txt);
+    }
+    private void createFloatTxt3d() {
+        floatTxt3d = new FloatTxt3d("",myFont,new Vector3f(0,0.3f,0));
+        this.rootNode.attachChild(floatTxt3d);
     }
 
     private void initGUI() {
