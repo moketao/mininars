@@ -12,12 +12,10 @@ import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.material.Material;
 import com.jme3.math.*;
-import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.control.BillboardControl;
 import com.jme3.scene.shape.Line;
-import com.jme3.scene.shape.Quad;
 import com.jme3.system.AppSettings;
 import com.simsilica.lemur.*;
 import com.simsilica.lemur.Button;
@@ -50,8 +48,9 @@ public class Show3D extends SimpleApplication{
     private ArrayList<Frame3D> frameQueue = new ArrayList<>();
     private ArrayList<Frame3D> moveQueue = new ArrayList<>();
     private boolean showInfo = false;
-    private Material matTerm;
+    private Material matConcept;
     private Material matTask;
+    private Material matConceptSml;
 
     private boolean online = true;
     private ArrayList<Item3D> willRemove = new ArrayList<>();
@@ -100,8 +99,9 @@ public class Show3D extends SimpleApplication{
         matGreen = MiniUtil.createMat(ColorRGBA.Green);
         matBlue = MiniUtil.createMat(ColorRGBA.Blue);
         matDarkGray = MiniUtil.createMat(ColorRGBA.DarkGray);
-        matTerm = MiniUtil.createPngMat("./node.png");
+        matConcept = MiniUtil.createPngMat("./node.png");
         matTask = MiniUtil.createPngMat("./task.png");
+        matConceptSml = MiniUtil.createPngMat("./node_sml.png");
     }
     private void init3D() {
         app.settings.setTitle("3d win");
@@ -240,13 +240,20 @@ public class Show3D extends SimpleApplication{
             item3D.type = Item3D.ItemTYPE.Concept;
             item3D.item = concept;
             item3D.key = concept.getKey();
-            item3D.geo = MiniUtil.create3dObject(opt+" "+item3D.key,matTerm);
+            item3D.geo = MiniUtil.create3dObject(opt+" "+item3D.key, getMat(concept));
             map.put(key,item3D);
         }
         Frame3D frame3D = new Frame3D();
         frame3D.item3d = item3D;
         frame3D.opt = opt;
         return frame3D;
+    }
+
+    private Material getMat(Concept concept) {
+        if(concept.getTerm() instanceof Inheritance){
+            return matConceptSml; // 系词在系统中有特殊地位,但在可视觉化中,可能应该弱化,暂时先给个小贴图.
+        }
+        return matConcept;
     }
 
     private Frame3D taskToFrame(String opt, Task task) {
