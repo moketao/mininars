@@ -7,25 +7,18 @@ import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
-import com.jme3.font.Rectangle;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.material.Material;
-import com.jme3.material.RenderState;
 import com.jme3.math.*;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
-import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.control.BillboardControl;
-import com.jme3.scene.debug.Arrow;
-import com.jme3.scene.debug.Grid;
 import com.jme3.scene.shape.Line;
 import com.jme3.scene.shape.Quad;
-import com.jme3.scene.shape.Sphere;
 import com.jme3.system.AppSettings;
-import com.jme3.texture.Texture;
 import com.simsilica.lemur.*;
 import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Container;
@@ -37,7 +30,6 @@ import nars.language.Term;
 import nars.main_nogui.ReasonerBatch;
 import nars.storage.Memory;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -48,7 +40,10 @@ public class Show3D extends SimpleApplication{
     public static final String UPDATE_CONCEPT_Y = "update concept Y"; //更新概念的高度
     private static FlyCamAppState flyCamAppState;
     private ReasonerBatch reasoner;
-    private Material mat;
+    private Material matRed;
+    private Material matGreen;
+    private Material matBlue;
+    private Material matDarkGray;
     private BitmapFont myFont;
     private HashMap<Integer, Item3D> map = new HashMap<>();
     private ArrayList<Frame3D> list = new ArrayList<>();
@@ -57,11 +52,9 @@ public class Show3D extends SimpleApplication{
     private boolean showInfo = false;
     private Material matTerm;
     private Material matTask;
-    private float nodeWidth = 0.5f;
-    private float taskWidth = 0.5f;
+
     private boolean online = true;
     private ArrayList<Item3D> willRemove = new ArrayList<>();
-    private RenderQueue.Bucket renderQueue;
     private Memory memory;
     Label selLabel;
     private int updateTextDelay = 0;
@@ -101,20 +94,14 @@ public class Show3D extends SimpleApplication{
     }
 
     private void initRes() {
+        MiniUtil.init(this.rootNode,this.assetManager);
         myFont = assetManager.loadFont("font/fontcn.fnt");
-        mat = new Material(this.assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        matTerm = new Material(this.assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        matTask = new Material(this.assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        Texture textureNode = this.assetManager.loadTexture("./node.png");
-        Texture textureTask = this.assetManager.loadTexture("./task.png");
-        renderQueue = RenderQueue.Bucket.Transparent;
-        matTerm.setTexture("ColorMap",textureNode);
-        matTerm.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
-        matTask.setTexture("ColorMap",textureTask);
-        matTask.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
-        mat.setColor("Color", ColorRGBA.Blue);
-        mat.getAdditionalRenderState().setWireframe(true);
-        mat.getAdditionalRenderState().setLineWidth(1.0F);
+        matRed = MiniUtil.createMat(ColorRGBA.Red);
+        matGreen = MiniUtil.createMat(ColorRGBA.Green);
+        matBlue = MiniUtil.createMat(ColorRGBA.Blue);
+        matDarkGray = MiniUtil.createMat(ColorRGBA.DarkGray);
+        matTerm = MiniUtil.createPngMat("./node.png");
+        matTask = MiniUtil.createPngMat("./task.png");
     }
     private void init3D() {
         app.settings.setTitle("3d win");
@@ -127,12 +114,12 @@ public class Show3D extends SimpleApplication{
         resetCam();
         Line line = new Line(new Vector3f(0, 2.5f, 0.0f), new Vector3f(0f, 1.5f, 0f));
         Geometry geomLine = new Geometry("Line", line);
-        geomLine.setMaterial(this.mat);
+        geomLine.setMaterial(this.matRed);
         this.rootNode.attachChild(geomLine);
-        this.putArrow(Vector3f.ZERO, Vector3f.UNIT_X, ColorRGBA.Red);
-        this.putArrow(Vector3f.ZERO, Vector3f.UNIT_Y, ColorRGBA.Green);
-        this.putArrow(Vector3f.ZERO, Vector3f.UNIT_Z, ColorRGBA.Blue);
-        this.putGrid(new Vector3f(0F, 0.0F, 0.0F), ColorRGBA.DarkGray);
+        MiniUtil.putArrow(Vector3f.ZERO, Vector3f.UNIT_X, matRed);
+        MiniUtil.putArrow(Vector3f.ZERO, Vector3f.UNIT_Y, matGreen);
+        MiniUtil.putArrow(Vector3f.ZERO, Vector3f.UNIT_Z, matBlue);
+        MiniUtil.putGrid(new Vector3f(0F, 0.0F, 0.0F), matDarkGray);
         createTxt3d();
 
         inputManager.addMapping("clickItem3D", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
@@ -160,17 +147,15 @@ public class Show3D extends SimpleApplication{
     };
 
     private void resetCam() {
-        this.cam.setLocation(new Vector3f(5.5826545F, 3.6192513F, 8.016988F));
-        this.cam.setRotation(new Quaternion(-0.04787097F, 0.9463123F, -0.16569641F, -0.27339742F));
+        System.out.println(cam.getLocation());
+        System.out.println(inst().cam.getRotation());
+        this.cam.setLocation(new Vector3f(3.009177f, 1.0300535f, 5.8067155f));
+        this.cam.setRotation(new Quaternion(0.0094482275f, 0.97163385f, 0.039399598f, -0.2329937f));
     }
 
     private void createTxt3d() {
-        BitmapText txt = new BitmapText(myFont, false);
-        txt.setBox(new Rectangle(0.0F, 0.0F, 6.0F, 3.0F));
-        txt.setQueueBucket(RenderQueue.Bucket.Transparent);
-        txt.setSize(0.5F);
-        txt.setText("WASD移动摄像机\n拖拽左键可旋转摄像机");
-        txt.setLocalTranslation(0,0,-6f);
+        BitmapText txt = MiniUtil.create3dtxt(myFont, "WASD移动摄像机\n拖拽左键可旋转摄像机");
+        txt.setLocalTranslation(0,2f,-6f);
         this.rootNode.attachChild(txt);
     }
 
@@ -213,26 +198,7 @@ public class Show3D extends SimpleApplication{
         setDisplayStatView(showInfo);
     }
 
-    public Geometry putShape(Mesh shape, ColorRGBA color) {
-        Geometry g = new Geometry("shape", shape);
-        mat.setColor("Color", color);
-        g.setMaterial(mat);
-        this.rootNode.attachChild(g);
-        return g;
-    }
 
-    public Geometry putArrow(Vector3f pos, Vector3f dir, ColorRGBA color) {
-        Arrow arrow = new Arrow(dir);
-        Geometry geometry = this.putShape(arrow, color);
-        geometry.setLocalTranslation(pos);
-        return geometry;
-    }
-
-    public Geometry putGrid(Vector3f pos, ColorRGBA color) {
-        Geometry geometry = this.putShape(new Grid(16, 16, 0.2F), color);
-        geometry.center().move(pos);
-        return geometry;
-    }
 
     @Override
     protected void destroyInput() {
@@ -274,15 +240,7 @@ public class Show3D extends SimpleApplication{
             item3D.type = Item3D.ItemTYPE.Concept;
             item3D.item = concept;
             item3D.key = concept.getKey();
-
-            Quad quad = new Quad(nodeWidth,nodeWidth);
-            Geometry g = new Geometry("g", quad);
-            g.setMaterial(matTerm);
-            g.setQueueBucket(renderQueue);
-            Node pivot = new Node(opt+" "+item3D.key);
-            pivot.attachChild(g);
-            g.setLocalTranslation(nodeWidth*-0.5f,nodeWidth*-0.5f,0);
-            item3D.geo = pivot;
+            item3D.geo = MiniUtil.create3dObject(opt+" "+item3D.key,matTerm);
             map.put(key,item3D);
         }
         Frame3D frame3D = new Frame3D();
@@ -299,15 +257,7 @@ public class Show3D extends SimpleApplication{
             item3D.type = Item3D.ItemTYPE.Concept;
             item3D.item = task;
             item3D.key = task.getKey();
-
-            Quad quad = new Quad(taskWidth,taskWidth);
-            Geometry g = new Geometry("g", quad);
-            g.setMaterial(matTask);
-            g.setQueueBucket(renderQueue);
-            Node pivot = new Node(opt+" "+item3D.key);
-            pivot.attachChild(g);
-            g.setLocalTranslation(taskWidth*-0.5f,taskWidth*-0.5f,0);
-            item3D.geo = pivot;
+            item3D.geo = MiniUtil.create3dObject(opt+" "+item3D.key,matTask);
             map.put(key,item3D);
         }
         Frame3D frame3D = new Frame3D();
@@ -317,10 +267,7 @@ public class Show3D extends SimpleApplication{
     }
 
     void addToRoot(Frame3D frame){
-
-        //todo: 根据抽象层级来设置具体位置而不是随机分布.
         frame.item3d.geo.setLocalTranslation(FastMath.nextRandomFloat()*2f-1f,0.2f,FastMath.nextRandomFloat()*3f-1.5f);
-
         BillboardControl billboardControl = new BillboardControl();
         billboardControl.setAlignment(BillboardControl.Alignment.Camera);
         frame.item3d.geo.addControl(billboardControl);
@@ -399,7 +346,7 @@ public class Show3D extends SimpleApplication{
         frame3D.opt = UPDATE_CONCEPT_Y;                                             // 标注这次的操作是: 更新高度
         Vector3f localTranslation = frame3D.item3d.geo.getLocalTranslation();       // 当前位置
         frame3D.startPos = localTranslation;
-        frame3D.endPos = new Vector3f(localTranslation.x, sum ,localTranslation.z); // 将要移动到的位置
+        frame3D.endPos = new Vector3f(localTranslation.x, sum, localTranslation.z); // 将要移动到的位置
         moveQueue.add(frame3D);
     }
 }

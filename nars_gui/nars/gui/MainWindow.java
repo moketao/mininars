@@ -229,6 +229,9 @@ public class MainWindow extends NarsFrame implements ActionListener, OutputChann
 
         record.show();
         record.play();
+
+        setAlwaysOnTop(true);
+        inputWindow.setAlwaysOnTop(true);
     }
 
     /**
