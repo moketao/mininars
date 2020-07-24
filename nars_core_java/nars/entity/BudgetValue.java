@@ -40,7 +40,7 @@ public class BudgetValue implements Cloneable {
     /** The character that separates the factors in a budget value 使用 ; 作为预算值内部因子之间的分割符 */
     private static final char SEPARATOR = Symbols.VALUE_SEPARATOR;
 
-    /** The relative share of time resource to be allocated 有限度越高, 获得的计算时长(线程时长)就越长*/
+    /** The relative share of time resource to be allocated 优先度越高, 获得的计算时长(线程时长)就越长与 真值/复杂度/持久度 都相关 */
     protected ShortFloat priority;
 
 	/**

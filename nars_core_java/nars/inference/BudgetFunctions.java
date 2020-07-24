@@ -63,7 +63,7 @@ public final class BudgetFunctions extends UtilityFunctions {
     /**
      * Evaluate the quality of a belief as a solution to a problem, then reward
      * the belief and de-prioritize the problem
-     * 评估解决方案
+     * 实际执行解决方案
      * @param problem The problem (question or goal) to be solved
      * @param solution The belief as solution
      * @param task The task to be immediately processed, or null for continued
@@ -81,7 +81,7 @@ public final class BudgetFunctions extends UtilityFunctions {
         boolean judgmentTask = task.getSentence().isJudgment();
         float quality = LocalRules.solutionQuality(problem, solution);
         if (judgmentTask) {
-            task.incPriority(quality);
+            task.incPriority(quality); // 如果是判断任务, 则加强判断任务的质量 (长期推动此任务).
         } else {
             float taskPriority = task.getPriority();
             budget = new BudgetValue(or(taskPriority, quality), task.getDurability(), truthToQuality(solution.getTruth()));
@@ -89,9 +89,9 @@ public final class BudgetFunctions extends UtilityFunctions {
         }
         if (feedbackToLinks) {
             TaskLink tLink = memory.currentTaskLink;
-            tLink.setPriority(Math.min(1 - quality, tLink.getPriority()));
+            tLink.setPriority(Math.min(1 - quality, tLink.getPriority()));  // - 减弱 任务 Link 优先级 (告一段落) // todo: 找个例子
             TermLink bLink = memory.currentBeliefLink;
-            bLink.incPriority(quality);
+            bLink.incPriority(quality);                                     // + 加强 信念 Link 优先级 // todo: 找个例子
         }
         return budget;
     }

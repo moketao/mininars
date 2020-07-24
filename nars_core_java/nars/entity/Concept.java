@@ -135,7 +135,7 @@ public final class Concept extends Item {
     /**
      * To accept a new judgment as isBelief, and check for revisions and
      * solutions
-     *
+     * 对判断进行修订和尝试 (trySolution 尝试解决方案)
      * @param task The task to be processed
      * @return Whether to continue the processing of the task
      */
@@ -150,41 +150,43 @@ public final class Concept extends Item {
                     task.getBudget().decPriority(0);    // duplicated task
                 }   // else: activated belief
                 Show3D.inst().remove(task);
-                return;// 如果时间差不多, 则说明重复了, 跳过, 不处理
-            } else if (LocalRules.revisible(judg, oldBelief)) {//如果可以修订
+                return;                                     // 如果时间差不多, 则说明重复了, 跳过, 不处理
+            } else if (LocalRules.revisible(judg, oldBelief)) {                          // 如果可以修订
                 memory.newStamp = Stamp.make(newStamp, oldStamp, memory.getTime());
                 if (memory.newStamp != null) {
                     memory.currentBelief = oldBelief;
-                    LocalRules.revision(judg, oldBelief, false, memory);//则修订
+                    LocalRules.revision(judg, oldBelief, false, memory); // 则修订
                 }
             }
         }
         if (task.getBudget().aboveThreshold()) {
             for (Task ques : questions) {
+                // 尝试解决方案, 如果经验足够好(比率高/次数多)并且好实施不复杂(奥卡姆剃刀:简单就是美), 则记到任务的最佳解决方案数组中
                 boolean best = LocalRules.trySolution(judg, ques, memory);
                 if(!best){
-                    Show3D.inst().remove(task);
+                    Show3D.inst().remove(task); // 不好的则略过
                 }
             }
             addToTable(judg, beliefs, Parameters.MAXIMUM_BELIEF_LENGTH);
         }else{
-            Show3D.inst().remove(task);
+            Show3D.inst().remove(task); // 不好的则略过
         }
     }
 
     /**
      * To answer a question by existing beliefs
-     *
+     * 通过已有信念集, 尝试回答一个问题.
      * @param task The task to be processed
-     * @return Whether to continue the processing of the task
      */
-    public float processQuestion(Task task) {
+    public void processQuestion(Task task) {
         Sentence ques = task.getSentence();
         boolean newQuestion = true;
         if (questions != null) {
             for (Task t : questions) {
                 Sentence q = t.getSentence();
-                if (q.getContent().equals(ques.getContent())) {
+                //这里判断: 如果存在旧问题, 并且只有两个句子全等, 才进行.
+                //(不全等的情况不在这里考虑, 而是通过 Task 近似假设扩大查找范围直到句式全等, 而不在这里处理)
+                if (q.getContent().equals(ques.getContent())) {// 不过一般来说, 能放进来的都是全等的, 有必要做这个比较吗? todo: 验证这个猜测.
                     ques = q;
                     newQuestion = false;
                     break;
@@ -192,21 +194,18 @@ public final class Concept extends Item {
             }
         }
         if (newQuestion) {
-            questions.add(task);
+            questions.add(task); // 如果是新问题, 则添加到旧问题列表.
         }
         if (questions.size() > Parameters.MAXIMUM_QUESTIONS_LENGTH) {
-            Task remove = questions.remove(0);// FIFO
+            Task remove = questions.remove(0);// FIFO 超过上限则清理, 先进先出.
             Show3D.inst().remove(remove);
         }
-        Sentence newAnswer = evaluation(ques, beliefs);
+        Sentence newAnswer = evaluation(ques, beliefs); // 评价,评估,找到最高质量的信念.
         if (newAnswer != null) {
-//            LocalRules.trySolution(ques, newAnswer, task, memory);
-            boolean ok = LocalRules.trySolution(newAnswer, task, memory);
-            if(!ok)Show3D.inst().remove(task);
-            return newAnswer.getTruth().getExpectation();
+            boolean best = LocalRules.trySolution(newAnswer, task, memory); // 尝试用这个问题解决,如果可行,还有一系列处理.
+            if( !best ) Show3D.inst().remove(task);
         } else {
-            if(!newQuestion) Show3D.inst().remove(task);
-            return 0.5f;
+            Show3D.inst().remove(task);
         }
     }
 

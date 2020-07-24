@@ -315,7 +315,7 @@ public abstract class CompoundTerm extends Term {
         for (Term t : arg) {
             name.append(Symbols.ARGUMENT_SEPARATOR);
             if (t instanceof CompoundTerm) {
-                ((CompoundTerm) t).setName(((CompoundTerm) t).makeName());
+                ((CompoundTerm) t).setName(((CompoundTerm) t).makeName()); // todo: 每次都 make name , 会不会开销太大?
             }
             name.append(t.getName());
         }

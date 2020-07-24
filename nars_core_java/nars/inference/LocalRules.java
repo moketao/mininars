@@ -101,7 +101,7 @@ public class LocalRules {
     public static boolean trySolution(Sentence belief, Task task, Memory memory) {
         Sentence problem = task.getSentence();
         Sentence oldBest = task.getBestSolution();
-        float newQ = solutionQuality(problem, belief);
+        float newQ = solutionQuality(problem, belief); //
         if (oldBest != null) {
             float oldQ = solutionQuality(problem, oldBest);
             if (oldQ >= newQ) {
@@ -121,7 +121,7 @@ public class LocalRules {
 
     /**
      * Evaluate the quality of the judgment as a solution to a problem
-     *
+     * 计算质量,   质量 = 长期正面经验 or 经验多少 or 长期正面经验扣减一定的复杂度.
      * @param problem A goal or question
      * @param solution The solution to be evaluated
      * @return The quality of the judgment as the solution
