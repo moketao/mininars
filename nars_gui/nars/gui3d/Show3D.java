@@ -36,6 +36,7 @@ public class Show3D extends SimpleApplication{
     public static final String INSERT_TASK = "insert task"; //生成任务/插入任务
     public static final String DERIVED = "derived task"; //衍生任务/分解任务
     public static final String UPDATE_CONCEPT_Y = "update concept Y"; //更新概念的高度
+    public static final String REMOVE = "remove"; //删除
     private static FlyCamAppState flyCamAppState;
     private ReasonerBatch reasoner;
     private Material matRed;
@@ -44,7 +45,7 @@ public class Show3D extends SimpleApplication{
     private Material matDarkGray;
     private BitmapFont myFont;
     private HashMap<Integer, Item3D> map = new HashMap<>();
-    private ArrayList<Frame3D> list = new ArrayList<>();
+    public ArrayList<Frame3D> timeLineFrames = new ArrayList<>(); // 等待播放的帧信息集
     private ArrayList<Frame3D> frameQueue = new ArrayList<>();
     private ArrayList<Frame3D> moveQueue = new ArrayList<>();
     private boolean showInfo = false;
@@ -57,7 +58,6 @@ public class Show3D extends SimpleApplication{
     private Memory memory;
     Label selLabel;
     private int updateTextDelay = 0;
-    private Geometry mark;
     private FloatTxt3d floatTxt3d;
 
     Show3D(AppState... initialStates){
@@ -225,11 +225,16 @@ public class Show3D extends SimpleApplication{
             frame = conceptToFrame(opt,concept);
         }
         frameQueue.add(frame); //先加到等待队列,等线程有空了再处理(放到场景中)
+        timeLineFrames.add(frame);
     }
 
     public <E extends Item> void remove(E overflowItem) {
         Item3D item3D = map.get(overflowItem.hashCode());
         willRemove.add(item3D);
+        Frame3D frame3D = new Frame3D();
+        frame3D.opt = REMOVE;
+        frame3D.item3d = item3D;
+        timeLineFrames.add(frame3D); // todo: 这里等于是把垃圾回收禁止了, 除非把 list 清空, 看看有没有其它更好的办法, 比如 clone ?
     }
     Item3D getItem3D(int key){
         Item3D item3D = map.get(key);
@@ -256,13 +261,6 @@ public class Show3D extends SimpleApplication{
         return frame3D;
     }
 
-    private Material getMat(Concept concept) {
-        if(concept.getTerm() instanceof Inheritance){
-            return matConceptSml; // 系词在系统中有特殊地位,但在可视觉化中,可能应该弱化,暂时先给个小贴图.
-        }
-        return matConcept;
-    }
-
     private Frame3D taskToFrame(String opt, Task task) {
         int key = task.hashCode();
         Item3D item3D = getItem3D(key);
@@ -280,13 +278,19 @@ public class Show3D extends SimpleApplication{
         return frame3D;
     }
 
+    private Material getMat(Concept concept) {
+        if(concept.getTerm() instanceof Inheritance){
+            return matConceptSml; // 系词在系统中有特殊地位,但在可视觉化中,可能应该弱化,暂时先给个小贴图.
+        }
+        return matConcept;
+    }
+
     void addToRoot(Frame3D frame){
         frame.item3d.geo.setLocalTranslation(FastMath.nextRandomFloat()*2f-1f,0.2f,FastMath.nextRandomFloat()*3f-1.5f);
         BillboardControl billboardControl = new BillboardControl();
         billboardControl.setAlignment(BillboardControl.Alignment.Camera);
         frame.item3d.geo.addControl(billboardControl);
         this.rootNode.attachChild(frame.item3d.geo);
-        list.add(frame);
     }
 
     @Override
@@ -337,23 +341,24 @@ public class Show3D extends SimpleApplication{
     }
 
     private void moveOneConcept(Term push,Term target, TruthValue truth) {
-        Float baseY;
+        Float baseY = 1f;
+        Float pushPower;
         if(truth.getConfidence()<0.5){
-            baseY = 1f;                                             // 信心不足就不推了, 只给基础高度 1, todo: 或者有更好的计算方式?
+            pushPower = baseY;                                      // 信心不足就不推了, 只给基础高度 1
         }else{
-            baseY = 1f + truth.getExpectation();                    // 基础高度 + 经验高度
+            pushPower = baseY + truth.getExpectation();             // 基础高度 + 经验高度
         }
         Concept concept = memory.getConcept(target);
-        Item3D item3D2 = map.get(concept.hashCode());               // todo: 需要判断 item3D2 中的 item 是否是 c2 ?
+        Item3D item3D2 = map.get(concept.hashCode());
 
         HashMap<String, Float> valForHeight = item3D2.valForHeight; // 推高的力量集 (来自其它 concept )
         String key = memory.getConcept(push).getKey();              // 推者的 key
-        valForHeight.put(key,baseY);                                // 记录当前信仰的推力
+        valForHeight.put(key,pushPower);                            // 记录当前信仰的推力
 
         Float sum = 0f;                                             // 推力汇总 , todo: 是否要用到 UtilityFunctions.aveGeo ?
         for(Float f : valForHeight.values())
         {
-            sum+=f;
+            sum+=f;                                                 // todo: 使用 FastMath.interpolateLinear 算偏移集,再平均, 或者 从上至下 树形分配位置.
         }
         Frame3D frame3D = new Frame3D();
         frame3D.item3d = item3D2;
@@ -361,6 +366,7 @@ public class Show3D extends SimpleApplication{
         Vector3f localTranslation = frame3D.item3d.geo.getLocalTranslation();       // 当前位置
         frame3D.startPos = localTranslation;
         frame3D.endPos = new Vector3f(localTranslation.x, sum, localTranslation.z); // 将要移动到的位置
+        timeLineFrames.add(frame3D);
         moveQueue.add(frame3D);
     }
 }

@@ -73,11 +73,11 @@ public final class BudgetFunctions extends UtilityFunctions {
      */
     static BudgetValue solutionEval(Sentence problem, Sentence solution, Task task, Memory memory) {
         BudgetValue budget = null;
-        boolean feedbackToLinks = false;
-        if (task == null) {                   // called in continued processing
-            task = memory.currentTask;
-            feedbackToLinks = true;
-        }
+//        boolean feedbackToLinks = false;
+//        if (task == null) {                   // called in continued processing
+//            task = memory.currentTask;
+//            feedbackToLinks = true;
+//        }
         boolean judgmentTask = task.getSentence().isJudgment();
         float quality = LocalRules.solutionQuality(problem, solution);
         if (judgmentTask) {
@@ -87,12 +87,12 @@ public final class BudgetFunctions extends UtilityFunctions {
             budget = new BudgetValue(or(taskPriority, quality), task.getDurability(), truthToQuality(solution.getTruth()));
             task.setPriority(Math.min(1 - quality, taskPriority));
         }
-        if (feedbackToLinks) {
-            TaskLink tLink = memory.currentTaskLink;
-            tLink.setPriority(Math.min(1 - quality, tLink.getPriority()));  // - 减弱 任务 Link 优先级 (告一段落) // todo: 找个例子
-            TermLink bLink = memory.currentBeliefLink;
-            bLink.incPriority(quality);                                     // + 加强 信念 Link 优先级 // todo: 找个例子
-        }
+//        if (feedbackToLinks) {
+//            TaskLink tLink = memory.currentTaskLink;
+//            tLink.setPriority(Math.min(1 - quality, tLink.getPriority()));  // - 减弱 任务 Link 优先级 (告一段落) // todo: 找个例子
+//            TermLink bLink = memory.currentBeliefLink;
+//            bLink.incPriority(quality);                                     // + 加强 信念 Link 优先级 // todo: 找个例子
+//        }
         return budget;
     }
 
