@@ -18,6 +18,8 @@ public class Frame3DSerializer extends Serializer {
         frame3D.startPosSize = (float) Serializer.readClassAndObject(byteBuffer);
         frame3D.type = (ItemTYPE) Serializer.readClassAndObject(byteBuffer);
         frame3D.key = (String) Serializer.readClassAndObject(byteBuffer);
+        frame3D.mat = (MatType) Serializer.readClassAndObject(byteBuffer);
+        frame3D.hashPlay = (int) Serializer.readClassAndObject(byteBuffer);
 
         return (T) frame3D;
     }
@@ -32,5 +34,7 @@ public class Frame3DSerializer extends Serializer {
         Serializer.writeClassAndObject(byteBuffer,frame3D.startPosSize);
         Serializer.writeClassAndObject(byteBuffer,frame3D.type);
         Serializer.writeClassAndObject(byteBuffer,frame3D.key);
+        Serializer.writeClassAndObject(byteBuffer,frame3D.mat);
+        Serializer.writeClassAndObject(byteBuffer,frame3D.hashPlay);
     }
 }

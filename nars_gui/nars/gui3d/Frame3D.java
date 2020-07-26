@@ -27,6 +27,12 @@ public class Frame3D extends AbstractMessage {
     /** 结束大小 */
     public float endPosSize;
 
+    /** 材质类型 */
+    public MatType mat;
+
+    /** hash code for play */
+    public int hashPlay;
+
     /** NARS 中的 Item.key */
     public String key;
 
@@ -35,4 +41,8 @@ public class Frame3D extends AbstractMessage {
 
     /** Task 或 Concept 的实际引用指针, 不会被保存到磁盘 */
     public Item item;
+
+    /** 在某一帧中从头至尾做动画, 完成了多少, 0 是刚开始, 1 是结束 , 这个值不会被保存*/
+    public float xInFrame;
+
 }

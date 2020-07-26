@@ -47,7 +47,8 @@ public class Show3D extends SimpleApplication{
     private Material matBlue;
     private Material matDarkGray;
     private BitmapFont myFont;
-    private HashMap<Integer, Item3D> map = new HashMap<>();
+    private HashMap<Integer, Item3D> itemMap = new HashMap<>();
+    private HashMap<Integer, Item3D> itemMapForPlay = new HashMap<>();
     private ArrayList<Frame3D> frameQueue = new ArrayList<>();
     private ArrayList<Frame3D> moveQueue = new ArrayList<>();
     private boolean showInfo = false;
@@ -106,6 +107,7 @@ public class Show3D extends SimpleApplication{
         Serializer.registerClass(FrameMgr.class);
         Serializer.registerClass(Frame3D.class,new Frame3DSerializer());
         Serializer.registerClass(ItemTYPE.class,new EnumSerializer());
+        Serializer.registerClass(MatType.class,new EnumSerializer());
     }
 
     void readFrameFromFile() throws IOException {
@@ -139,7 +141,7 @@ public class Show3D extends SimpleApplication{
         resetCam();
         Line line = new Line(new Vector3f(0, 2.5f, 0.0f), new Vector3f(0f, 1.5f, 0f));
         Geometry geomLine = new Geometry("Line", line);
-        geomLine.setMaterial(this.matRed);
+        geomLine.setMaterial(this.matDarkGray);
         this.rootNode.attachChild(geomLine);
         MiniUtil.putArrow(Vector3f.ZERO, Vector3f.UNIT_X, matRed);
         MiniUtil.putArrow(Vector3f.ZERO, Vector3f.UNIT_Y, matGreen);
@@ -276,71 +278,108 @@ public class Show3D extends SimpleApplication{
         Frame3D frame = null;
         if(item instanceof Task){
             Task task = (Task) item;
-            frame = taskToFrame(opt,task);
+            frame = taskToFrame(opt,task,null);
         }else if (item instanceof Concept){
             Concept concept = (Concept) item;
-            frame = conceptToFrame(opt,concept);
+            frame = conceptToFrame(opt,concept,null);
         }
         frameQueue.add(frame); //先加到等待队列,等线程有空了再处理(放到场景中)
+        frame.hashPlay = frame.item3d.geo.hashCode();
         frameMgr.add(frame);
     }
 
     public <E extends Item> void remove(E overflowItem) {
         if(overflowItem==null)return;
-        Item3D item3D = map.get(overflowItem.hashCode());
+        Item3D item3D = itemMap.get(overflowItem.hashCode());
         if(item3D==null)return;
         willRemove.add(item3D);
         Frame3D frame3D = new Frame3D();
         frame3D.opt = REMOVE;
         frame3D.item3d = item3D;
+        frame3D.hashPlay = item3D.geo.hashCode();
         frameMgr.add(frame3D);
     }
-    Item3D getItem3D(int key){
-        Item3D item3D = map.get(key);
+    Item3D getItem3D(int hash){
+        Item3D item3D = itemMap.get(hash);
         if(item3D==null){
             item3D = new Item3D();
-            map.put(key,item3D);
+            itemMap.put(hash,item3D);
         }
         return item3D;
     }
-    private Frame3D conceptToFrame(String opt, Concept concept) {
-        Frame3D frame3D = new Frame3D();
-        int key = concept.hashCode();
-        Item3D item3D = getItem3D(key);
+    private Frame3D conceptToFrame(String opt, Concept concept , Frame3D _frame3D) {
+        Frame3D frame3D;
+        Item3D item3D;
+        int hash;
+        if(concept == null){
+            frame3D = _frame3D;
+            item3D = new Item3D();
+            hash = frame3D.hashCode();
+            itemMap.put(hash,item3D);
+        }else{
+            frame3D = new Frame3D();
+            hash = concept.hashCode();
+        }
+        item3D = getItem3D(hash);
+        Material mat = getMat(concept, frame3D);
         if(!item3D.hasInit){
             item3D.hasInit = true;
-            frame3D.type = ItemTYPE.Concept;
             frame3D.item = concept;
-            frame3D.key = concept.getKey();
-            item3D.geo = MiniUtil.create3dObject(opt+" "+frame3D.key, getMat(concept));
-            map.put(key,item3D);
+            frame3D.key = concept==null?_frame3D.key:concept.getKey();
+            item3D.geo = MiniUtil.create3dObject(opt+" "+frame3D.key, mat);
+            itemMap.put(hash,item3D);
         }
+        frame3D.type = ItemTYPE.Concept;
         frame3D.item3d = item3D;
         frame3D.opt = opt;
         return frame3D;
     }
 
-    private Frame3D taskToFrame(String opt, Task task) {
-        Frame3D frame3D = new Frame3D();
-        int key = task.hashCode();
-        Item3D item3D = getItem3D(key);
+    private Frame3D taskToFrame(String opt, Task task , Frame3D _frame3D) {
+        Frame3D frame3D;
+        Item3D item3D;
+        int hash;
+        if(task == null){
+            frame3D = _frame3D;
+            item3D = new Item3D();
+            hash = frame3D.hashCode();
+            itemMap.put(hash,item3D);
+        }else{
+            frame3D = new Frame3D();
+            hash = task.hashCode();
+        }
+        item3D = getItem3D(hash);
+        frame3D.mat = MatType.Task;
+        Material mat = getMat(null, frame3D);
         if(!item3D.hasInit){
             item3D.hasInit = true;
-            frame3D.type = ItemTYPE.Concept;
             frame3D.item = task;
-            frame3D.key = task.getKey();
-            item3D.geo = MiniUtil.create3dObject(opt+" "+frame3D.key,matTask);
-            map.put(key,item3D);
+            frame3D.key = task==null?_frame3D.key:task.getKey();
+            item3D.geo = MiniUtil.create3dObject(opt+" "+frame3D.key,mat);
+            itemMap.put(hash,item3D);
         }
+        frame3D.type = ItemTYPE.Concept;
         frame3D.item3d = item3D;
         frame3D.opt = opt;
         return frame3D;
     }
 
-    private Material getMat(Concept concept) {
+    private Material getMat(Concept concept, Frame3D frame3D) {
+        if(concept==null){
+            if(frame3D.mat==MatType.Concept){
+                return matConcept;
+            }else if (frame3D.mat==MatType.ConceptSml){
+                return matConceptSml;
+            }else if (frame3D.mat==MatType.Task){
+                return matTask;
+            }
+            return null;
+        }
         if(concept.getTerm() instanceof Inheritance){
+            frame3D.mat = MatType.ConceptSml;
             return matConceptSml; // 系词在系统中有特殊地位,但在可视觉化中,可能应该弱化,暂时先给个小贴图.
         }
+        frame3D.mat = MatType.Concept;
         return matConcept;
     }
 
@@ -409,7 +448,7 @@ public class Show3D extends SimpleApplication{
             pushPower = baseY + truth.getExpectation();             // 基础高度 + 经验高度
         }
         Concept concept = memory.getConcept(target);
-        Item3D item3D2 = map.get(concept.hashCode());
+        Item3D item3D2 = itemMap.get(concept.hashCode());
 
         HashMap<String, Float> valForHeight = item3D2.valForHeight; // 推高的力量集 (来自其它 concept )
         String key = memory.getConcept(push).getKey();              // 推者的 key
@@ -427,15 +466,50 @@ public class Show3D extends SimpleApplication{
         frame3D.startPos.set(posNow);
         frame3D.endPos.set(posNow.x, sum, posNow.z);                // 将要移动到的位置
         frameMgr.add(frame3D);
+        frame3D.hashPlay = frame3D.item3d.geo.hashCode();
         moveQueue.add(frame3D);
     }
+    int playIndex = -1;
     private void play() {
-        int playIndex = 0;
-        Float xInFrame = 0f;
+        playIndex++;
+        System.out.println("playIndex:"+playIndex);
+        float xInFrame = 0f;
         Frame3D frame3D = frameMgr.get(playIndex);
-        Item3D item3D = map.get(frame3D.item3d);
-        if(item3D==null){
+        if(frame3D==null) {
+            System.out.println("播放帧已用完");
+            return;
+        }
+        if(frame3D.item3d==null && !frame3D.opt.equals(REMOVE) && !frame3D.opt.equals(UPDATE_CONCEPT_Y)) {
+            toRealFrame(frame3D, null);
+            addToRoot(frame3D);
+            itemMapForPlay.put(frame3D.hashPlay,frame3D.item3d);
+            return;
+        }
+        if(frame3D.opt.equals(UPDATE_CONCEPT_Y)){
+            frame3D.xInFrame = xInFrame;
+            Item3D item3D = itemMapForPlay.get(frame3D.hashPlay);
+            frame3D.item3d = item3D;
+            moveQueue.add(frame3D);
+        }else{
+            if(frame3D.opt.equals(REMOVE)){
+                Item3D item3D = itemMapForPlay.get(frame3D.hashPlay);
+                if(item3D!=null){
+                    frame3D.item3d = item3D;
+                    willRemove.add(frame3D.item3d);
+                }else{
+                    System.out.println("要移除的对象不存在");
+                }
+            }
+        }
+    }
 
+    private Frame3D toRealFrame(Frame3D frame, Object o) {
+        if(frame.type==ItemTYPE.Concept){
+            return conceptToFrame(frame.opt,null,frame);
+        }else if(frame.type==ItemTYPE.Task){
+            return taskToFrame(frame.opt,null,frame);
+        }else {
+            return null;
         }
     }
 }
