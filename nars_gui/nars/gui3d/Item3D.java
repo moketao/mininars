@@ -1,19 +1,17 @@
 package nars.gui3d;
 
-import com.jme3.math.Vector3f;
-import com.jme3.scene.Geometry;
+import com.jme3.network.AbstractMessage;
+import com.jme3.network.serializing.Serializable;
 import com.jme3.scene.Node;
-import nars.entity.Item;
-import nars.entity.TruthValue;
 
 import java.util.HashMap;
 
-public class Item3D {
+@Serializable
+public class Item3D extends AbstractMessage {
     public boolean hasInit = false;
-    public Item item;
     public ItemTYPE type;
     public String key;
-    public Node geo;
+    public int geoHashCode;
     public HashMap<String, Float> valForHeight = new HashMap<>();
 
     public enum ItemTYPE {
