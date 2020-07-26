@@ -39,4 +39,8 @@ public class FrameMgr extends AbstractMessage {
         FrameMgr message = (FrameMgr) protocol.toMessage(wrap);
         this.timeLineFrames = message.timeLineFrames;
     }
+
+    public Frame3D get(int playIndex) {
+        return timeLineFrames.get(playIndex);
+    }
 }

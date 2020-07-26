@@ -47,7 +47,6 @@ public class Show3D extends SimpleApplication{
     private Material matDarkGray;
     private BitmapFont myFont;
     private HashMap<Integer, Item3D> map = new HashMap<>();
-    private HashMap<Integer, Node> gmap = new HashMap<>();
     private ArrayList<Frame3D> frameQueue = new ArrayList<>();
     private ArrayList<Frame3D> moveQueue = new ArrayList<>();
     private boolean showInfo = false;
@@ -104,6 +103,7 @@ public class Show3D extends SimpleApplication{
         Serializer.registerClass(Item3D.class);
         Serializer.registerClass(Frame3D.class);
         Serializer.registerClass(FrameMgr.class);
+        Serializer.registerClass(Frame3D.class,new Frame3DSerializer());
     }
     void readFrameFromFile() throws IOException {
         app.frameMgr.read();
@@ -239,6 +239,13 @@ public class Show3D extends SimpleApplication{
             }
         });
 
+        Button playBtn = new Button("播放 frames.dat");
+        playBtn.setFontSize(20);
+        myWindow.addChild(playBtn);
+        playBtn.addClickCommands(source -> {
+            play();
+        });
+
         selLabel = new Label("当前未选中节点");
         selLabel.setFontSize(25);
         selLabel.setTextHAlignment(HAlignment.Center);
@@ -282,7 +289,7 @@ public class Show3D extends SimpleApplication{
         willRemove.add(item3D);
         Frame3D frame3D = new Frame3D();
         frame3D.opt = REMOVE;
-        frame3D.itemHashCode = item3D.geoHashCode;
+        frame3D.item3d = item3D;
         frameMgr.add(frame3D);
     }
     Item3D getItem3D(int key){
@@ -296,17 +303,16 @@ public class Show3D extends SimpleApplication{
     private Frame3D conceptToFrame(String opt, Concept concept) {
         int key = concept.hashCode();
         Item3D item3D = getItem3D(key);
-        Frame3D frame3D = new Frame3D();
-        frame3D.itemHashCode = concept.hashCode();
         if(!item3D.hasInit){
             item3D.hasInit = true;
             item3D.type = Item3D.ItemTYPE.Concept;
+            item3D.item = concept;
             item3D.key = concept.getKey();
-            Node node = MiniUtil.create3dObject(opt + " " + item3D.key, getMat(concept));
-            item3D.geoHashCode = node.hashCode();
-            map.put(frame3D.itemHashCode,item3D);
-            gmap.put(item3D.geoHashCode,node);
+            item3D.geo = MiniUtil.create3dObject(opt+" "+item3D.key, getMat(concept));
+            map.put(key,item3D);
         }
+        Frame3D frame3D = new Frame3D();
+        frame3D.item3d = item3D;
         frame3D.opt = opt;
         return frame3D;
     }
@@ -314,17 +320,16 @@ public class Show3D extends SimpleApplication{
     private Frame3D taskToFrame(String opt, Task task) {
         int key = task.hashCode();
         Item3D item3D = getItem3D(key);
-        Frame3D frame3D = new Frame3D();
-        frame3D.itemHashCode = task.hashCode();
         if(!item3D.hasInit){
             item3D.hasInit = true;
             item3D.type = Item3D.ItemTYPE.Concept;
+            item3D.item = task;
             item3D.key = task.getKey();
-            Node node = MiniUtil.create3dObject(opt + " " + item3D.key, matTask);
-            item3D.geoHashCode = node.hashCode();
-            map.put(frame3D.itemHashCode,item3D);
-            gmap.put(item3D.geoHashCode,node);
+            item3D.geo = MiniUtil.create3dObject(opt+" "+item3D.key,matTask);
+            map.put(key,item3D);
         }
+        Frame3D frame3D = new Frame3D();
+        frame3D.item3d = item3D;
         frame3D.opt = opt;
         return frame3D;
     }
@@ -337,13 +342,11 @@ public class Show3D extends SimpleApplication{
     }
 
     void addToRoot(Frame3D frame){
-        Item3D item3D = map.get(frame.itemHashCode);
-        Node g = gmap.get(item3D.geoHashCode);
-        g.setLocalTranslation(FastMath.nextRandomFloat()*2f-1f,0.2f,FastMath.nextRandomFloat()*3f-1.5f);
+        frame.item3d.geo.setLocalTranslation(FastMath.nextRandomFloat()*2f-1f,0.2f,FastMath.nextRandomFloat()*3f-1.5f);
         BillboardControl billboardControl = new BillboardControl();
         billboardControl.setAlignment(BillboardControl.Alignment.Camera);
-        g.addControl(billboardControl);
-        this.rootNode.attachChild(g);
+        frame.item3d.geo.addControl(billboardControl);
+        this.rootNode.attachChild(frame.item3d.geo);
     }
 
     @Override
@@ -363,17 +366,14 @@ public class Show3D extends SimpleApplication{
         while (willRemove.size()>0){
             Item3D item3D = willRemove.remove(willRemove.size() - 1);
             if(item3D!=null){
-                Node g = gmap.get(item3D.geoHashCode);
-                g.removeFromParent();
+                item3D.geo.removeFromParent();
             }
         }
         while (moveQueue.size()>0){
             Frame3D frame = moveQueue.remove(moveQueue.size() - 1);
             if(frame==null) continue;
-            Item3D item3D = map.get(frame.itemHashCode);
-            if(frame!=null && item3D!=null && item3D.geoHashCode != 0){
-                Node g = gmap.get(item3D.geoHashCode);
-                g.setLocalTranslation(frame.endPos.x,frame.endPos.y,frame.endPos.z); // todo: 动画
+            if(frame!=null && frame.item3d!=null && frame.item3d.geo!=null){
+                frame.item3d.geo.setLocalTranslation(frame.endPos.x,frame.endPos.y,frame.endPos.z); // todo: 动画
             }
         }
         super.simpleUpdate(tpf);
@@ -418,15 +418,21 @@ public class Show3D extends SimpleApplication{
             sum+=f;                                                 // todo: 使用 FastMath.interpolateLinear 算偏移集,再平均, 或者 从上至下 树形分配位置.
         }
         Frame3D frame3D = new Frame3D();
-        frame3D.itemHashCode = item3D2.hashCode();
+        frame3D.item3d = item3D2;
         frame3D.opt = UPDATE_CONCEPT_Y;                             // 标注这次的操作是: 更新高度
-        Node g = gmap.get(item3D2.geoHashCode);
-        Vector3f posNow = g.getLocalTranslation();                  // 当前位置
-        frame3D.startPos = new Vector3f(posNow);
-        frame3D.endPos = new Vector3f(posNow.x, sum, posNow.z);     // 将要移动到的位置
+        Vector3f posNow = frame3D.item3d.geo.getLocalTranslation(); // 当前位置
+        frame3D.startPos.set(posNow);
+        frame3D.endPos.set(posNow.x, sum, posNow.z);                // 将要移动到的位置
         frameMgr.add(frame3D);
-        map.put(frame3D.itemHashCode,item3D2);
-        gmap.put(item3D2.geoHashCode,g);
         moveQueue.add(frame3D);
+    }
+    private void play() {
+        int playIndex = 0;
+        Float xInFrame = 0f;
+        Frame3D frame3D = frameMgr.get(playIndex);
+        Item3D item3D = map.get(frame3D.item3d);
+        if(item3D==null){
+
+        }
     }
 }
