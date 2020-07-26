@@ -26,5 +26,4 @@ public class Frame3D extends AbstractMessage {
     /** 结束大小 */
     public float endPosSize;
 
-    public String tmp;
 }

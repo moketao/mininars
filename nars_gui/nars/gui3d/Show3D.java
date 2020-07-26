@@ -424,7 +424,6 @@ public class Show3D extends SimpleApplication{
         Vector3f posNow = g.getLocalTranslation();                  // 当前位置
         frame3D.startPos = new Vector3f(posNow);
         frame3D.endPos = new Vector3f(posNow.x, sum, posNow.z);     // 将要移动到的位置
-        frame3D.tmp = frame3D.endPos.toString();
         frameMgr.add(frame3D);
         map.put(frame3D.itemHashCode,item3D2);
         gmap.put(item3D2.geoHashCode,g);
