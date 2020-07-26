@@ -3,6 +3,7 @@ package nars.gui3d;
 import com.jme3.math.Vector3f;
 import com.jme3.network.AbstractMessage;
 import com.jme3.network.serializing.Serializable;
+import nars.entity.Item;
 
 
 @Serializable
@@ -26,4 +27,12 @@ public class Frame3D extends AbstractMessage {
     /** 结束大小 */
     public float endPosSize;
 
+    /** NARS 中的 Item.key */
+    public String key;
+
+    /** 类型 (Task 或 Concept) */
+    public ItemTYPE type;
+
+    /** Task 或 Concept 的实际引用指针, 不会被保存到磁盘 */
+    public Item item;
 }

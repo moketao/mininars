@@ -13,6 +13,7 @@ import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.material.Material;
 import com.jme3.math.*;
 import com.jme3.network.serializing.Serializer;
+import com.jme3.network.serializing.serializers.EnumSerializer;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.control.BillboardControl;
@@ -104,7 +105,9 @@ public class Show3D extends SimpleApplication{
         Serializer.registerClass(Frame3D.class);
         Serializer.registerClass(FrameMgr.class);
         Serializer.registerClass(Frame3D.class,new Frame3DSerializer());
+        Serializer.registerClass(ItemTYPE.class,new EnumSerializer());
     }
+
     void readFrameFromFile() throws IOException {
         app.frameMgr.read();
         setTips("已从"+FrameMgr.path+" 读取数据, len:"+app.frameMgr.timeLineFrames.size());
@@ -116,7 +119,7 @@ public class Show3D extends SimpleApplication{
 
     private void initRes() {
         MiniUtil.init(this.rootNode,this.assetManager);
-        myFont = assetManager.loadFont("font/fontcn.fnt");
+        myFont = assetManager.loadFont("font/fontCN.fnt");
         matRed = MiniUtil.createMat(ColorRGBA.Red);
         matGreen = MiniUtil.createMat(ColorRGBA.Green);
         matBlue = MiniUtil.createMat(ColorRGBA.Blue);
@@ -239,7 +242,7 @@ public class Show3D extends SimpleApplication{
             }
         });
 
-        Button playBtn = new Button("播放 frames.dat");
+        Button playBtn = new Button("播放");
         playBtn.setFontSize(20);
         myWindow.addChild(playBtn);
         playBtn.addClickCommands(source -> {
@@ -301,34 +304,34 @@ public class Show3D extends SimpleApplication{
         return item3D;
     }
     private Frame3D conceptToFrame(String opt, Concept concept) {
+        Frame3D frame3D = new Frame3D();
         int key = concept.hashCode();
         Item3D item3D = getItem3D(key);
         if(!item3D.hasInit){
             item3D.hasInit = true;
-            item3D.type = Item3D.ItemTYPE.Concept;
-            item3D.item = concept;
-            item3D.key = concept.getKey();
-            item3D.geo = MiniUtil.create3dObject(opt+" "+item3D.key, getMat(concept));
+            frame3D.type = ItemTYPE.Concept;
+            frame3D.item = concept;
+            frame3D.key = concept.getKey();
+            item3D.geo = MiniUtil.create3dObject(opt+" "+frame3D.key, getMat(concept));
             map.put(key,item3D);
         }
-        Frame3D frame3D = new Frame3D();
         frame3D.item3d = item3D;
         frame3D.opt = opt;
         return frame3D;
     }
 
     private Frame3D taskToFrame(String opt, Task task) {
+        Frame3D frame3D = new Frame3D();
         int key = task.hashCode();
         Item3D item3D = getItem3D(key);
         if(!item3D.hasInit){
             item3D.hasInit = true;
-            item3D.type = Item3D.ItemTYPE.Concept;
-            item3D.item = task;
-            item3D.key = task.getKey();
-            item3D.geo = MiniUtil.create3dObject(opt+" "+item3D.key,matTask);
+            frame3D.type = ItemTYPE.Concept;
+            frame3D.item = task;
+            frame3D.key = task.getKey();
+            item3D.geo = MiniUtil.create3dObject(opt+" "+frame3D.key,matTask);
             map.put(key,item3D);
         }
-        Frame3D frame3D = new Frame3D();
         frame3D.item3d = item3D;
         frame3D.opt = opt;
         return frame3D;
