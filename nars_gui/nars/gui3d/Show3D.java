@@ -47,7 +47,7 @@ public class Show3D extends SimpleApplication{
     private Material matBlue;
     private Material matDarkGray;
     private BitmapFont myFont;
-    private HashMap<Integer, Item3D> itemMap = new HashMap<>();
+    private HashMap<Integer, Item3D> item3dMap = new HashMap<>();
     private HashMap<Integer, Item3D> itemMapForPlay = new HashMap<>();
     private ArrayList<Frame3D> frameQueue = new ArrayList<>();
     private ArrayList<Frame3D> moveQueue = new ArrayList<>();
@@ -264,8 +264,6 @@ public class Show3D extends SimpleApplication{
         setDisplayStatView(showInfo);
     }
 
-
-
     @Override
     protected void destroyInput() {
         this.online = false;
@@ -275,14 +273,7 @@ public class Show3D extends SimpleApplication{
     public void append(String opt, Item item) {
         if(item==null) return;
         if(!online) return;
-        Frame3D frame = null;
-        if(item instanceof Task){
-            Task task = (Task) item;
-            frame = taskToFrame(opt,task,null);
-        }else if (item instanceof Concept){
-            Concept concept = (Concept) item;
-            frame = conceptToFrame(opt,concept,null);
-        }
+        Frame3D frame = createFrameAnd3dObj(item,opt,null);
         frameQueue.add(frame); //先加到等待队列,等线程有空了再处理(放到场景中)
         frame.hashPlay = frame.item3d.geo.hashCode();
         frameMgr.add(frame);
@@ -290,7 +281,7 @@ public class Show3D extends SimpleApplication{
 
     public <E extends Item> void remove(E overflowItem) {
         if(overflowItem==null)return;
-        Item3D item3D = itemMap.get(overflowItem.hashCode());
+        Item3D item3D = item3dMap.get(overflowItem.hashCode());
         if(item3D==null)return;
         willRemove.add(item3D);
         Frame3D frame3D = new Frame3D();
@@ -300,87 +291,70 @@ public class Show3D extends SimpleApplication{
         frameMgr.add(frame3D);
     }
     Item3D getItem3D(int hash){
-        Item3D item3D = itemMap.get(hash);
+        Item3D item3D = item3dMap.get(hash);
         if(item3D==null){
             item3D = new Item3D();
-            itemMap.put(hash,item3D);
+            item3dMap.put(hash,item3D);
         }
         return item3D;
     }
-    private Frame3D conceptToFrame(String opt, Concept concept , Frame3D _frame3D) {
+    private Frame3D createFrameAnd3dObj(Item item, String opt , Frame3D _frame3D) {
+        boolean b = item instanceof Concept;
         Frame3D frame3D;
         Item3D item3D;
         int hash;
-        if(concept == null){
+        if(item == null){
             frame3D = _frame3D;
             item3D = new Item3D();
             hash = frame3D.hashCode();
-            itemMap.put(hash,item3D);
+            item3dMap.put(hash,item3D);
         }else{
             frame3D = new Frame3D();
-            hash = concept.hashCode();
+            hash = item.hashCode();
+            item3D = getItem3D(hash);
         }
-        item3D = getItem3D(hash);
-        Material mat = getMat(concept, frame3D);
+        frame3D.type = b?ItemTYPE.Concept:ItemTYPE.Task;
+        setMat(item,frame3D);
+        Material mat = setMat(item, frame3D);
         if(!item3D.hasInit){
             item3D.hasInit = true;
-            frame3D.item = concept;
-            frame3D.key = concept==null?_frame3D.key:concept.getKey();
+            frame3D.item = item;
+            frame3D.key = item==null?frame3D.key:item.getKey();
             item3D.geo = MiniUtil.create3dObject(opt+" "+frame3D.key, mat);
-            itemMap.put(hash,item3D);
+            item3dMap.put(hash,item3D);
         }
-        frame3D.type = ItemTYPE.Concept;
         frame3D.item3d = item3D;
         frame3D.opt = opt;
         return frame3D;
     }
 
-    private Frame3D taskToFrame(String opt, Task task , Frame3D _frame3D) {
-        Frame3D frame3D;
-        Item3D item3D;
-        int hash;
-        if(task == null){
-            frame3D = _frame3D;
-            item3D = new Item3D();
-            hash = frame3D.hashCode();
-            itemMap.put(hash,item3D);
-        }else{
-            frame3D = new Frame3D();
-            hash = task.hashCode();
-        }
-        item3D = getItem3D(hash);
-        frame3D.mat = MatType.Task;
-        Material mat = getMat(null, frame3D);
-        if(!item3D.hasInit){
-            item3D.hasInit = true;
-            frame3D.item = task;
-            frame3D.key = task==null?_frame3D.key:task.getKey();
-            item3D.geo = MiniUtil.create3dObject(opt+" "+frame3D.key,mat);
-            itemMap.put(hash,item3D);
-        }
-        frame3D.type = ItemTYPE.Concept;
-        frame3D.item3d = item3D;
-        frame3D.opt = opt;
-        return frame3D;
-    }
-
-    private Material getMat(Concept concept, Frame3D frame3D) {
-        if(concept==null){
+    private Material setMat(Item item, Frame3D frame3D) {
+        if(item==null){
             if(frame3D.mat==MatType.Concept){
+                frame3D.mat = MatType.Concept;
                 return matConcept;
             }else if (frame3D.mat==MatType.ConceptSml){
+                frame3D.mat = MatType.ConceptSml;
                 return matConceptSml;
             }else if (frame3D.mat==MatType.Task){
+                frame3D.mat = MatType.Task;
                 return matTask;
             }
             return null;
         }
-        if(concept.getTerm() instanceof Inheritance){
-            frame3D.mat = MatType.ConceptSml;
-            return matConceptSml; // 系词在系统中有特殊地位,但在可视觉化中,可能应该弱化,暂时先给个小贴图.
+        if(item instanceof Concept){
+            frame3D.mat = MatType.Concept;
+            if(((Concept) item).getTerm() instanceof Inheritance){
+                frame3D.mat = MatType.ConceptSml;
+                return matConceptSml; // 系词在系统中有特殊地位,但在可视觉化中,可能应该弱化,暂时先给个小贴图.
+            }else {
+                frame3D.mat = MatType.Concept;
+                return matConcept;
+            }
+        }else {
+            frame3D.mat = MatType.Task;
+            return matTask;
         }
-        frame3D.mat = MatType.Concept;
-        return matConcept;
     }
 
     void addToRoot(Frame3D frame){
@@ -448,7 +422,7 @@ public class Show3D extends SimpleApplication{
             pushPower = baseY + truth.getExpectation();             // 基础高度 + 经验高度
         }
         Concept concept = memory.getConcept(target);
-        Item3D item3D2 = itemMap.get(concept.hashCode());
+        Item3D item3D2 = item3dMap.get(concept.hashCode());
 
         HashMap<String, Float> valForHeight = item3D2.valForHeight; // 推高的力量集 (来自其它 concept )
         String key = memory.getConcept(push).getKey();              // 推者的 key
@@ -480,7 +454,7 @@ public class Show3D extends SimpleApplication{
             return;
         }
         if(frame3D.item3d==null && !frame3D.opt.equals(REMOVE) && !frame3D.opt.equals(UPDATE_CONCEPT_Y)) {
-            toRealFrame(frame3D, null);
+            createFrameAnd3dObj(null, frame3D.opt, frame3D);
             addToRoot(frame3D);
             itemMapForPlay.put(frame3D.hashPlay,frame3D.item3d);
             return;
@@ -500,16 +474,6 @@ public class Show3D extends SimpleApplication{
                     System.out.println("要移除的对象不存在");
                 }
             }
-        }
-    }
-
-    private Frame3D toRealFrame(Frame3D frame, Object o) {
-        if(frame.type==ItemTYPE.Concept){
-            return conceptToFrame(frame.opt,null,frame);
-        }else if(frame.type==ItemTYPE.Task){
-            return taskToFrame(frame.opt,null,frame);
-        }else {
-            return null;
         }
     }
 }
