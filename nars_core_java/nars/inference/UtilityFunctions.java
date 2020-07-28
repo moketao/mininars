@@ -32,6 +32,18 @@ public class UtilityFunctions {
 
     /**
      * A function where the output is conjunctively determined by the inputs
+     *
+     * 可在浏览器的 console 中运行如下代码, 方便理解:
+     * function and(arr) {
+     *     var product = 1;
+     *     for (var i = 0; i<arr.length; i++) {
+     *         var f = arr[i];
+     *         product *= f;
+     *     }
+     *     return product;
+     * }
+     * and([0.6,0.6,0.1]) // 0.036
+     *
      * @param arr The inputs, each in [0, 1]
      * @return The output that is no larger than each input
      */
@@ -45,6 +57,24 @@ public class UtilityFunctions {
 
     /**
      * A function where the output is disjunctively determined by the inputs
+     *
+     * or([0.6,0.6]) = 0.84
+     * or([0.6,0.6,0.1]) = 0.856
+     * or([0.9,0.6]) = 0.96
+     * or([0.6,0.9]) = 0.96
+     * or([0.1,0.1,0.1]) = 0.2709999999999999
+     *
+     * 可在浏览器的 console 中运行如下代码, 方便理解:
+     * function or(arr) {
+     *     var product = 1;
+     *     for (var i = 0; i<arr.length; i++) {
+     *         var f = arr[i];
+     *         product *= (1 - f);
+     *     }
+     *     return 1 - product;
+     * }
+     * or([0.3,0.3,0.3]) // 0.657
+     *
      * @param arr The inputs, each in [0, 1]
      * @return The output that is no smaller than each input
      */
@@ -58,6 +88,7 @@ public class UtilityFunctions {
 
     /**
      * A function where the output is the arithmetic average the inputs
+     * 算数平均
      * @param arr The inputs, each in [0, 1]
      * @return The arithmetic average the inputs
      */
@@ -71,6 +102,7 @@ public class UtilityFunctions {
 
     /**
      * A function where the output is the geometric average the inputs
+     * 几何平均
      * @param arr The inputs, each in [0, 1]
      * @return The geometric average the inputs
      */

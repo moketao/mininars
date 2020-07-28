@@ -212,6 +212,7 @@ public final class Concept extends Item {
     /**
      * Link to a new task from all relevant concepts for continued processing in
      * the near future for unspecified time.
+     * 把相关概念链接到一个新的 Task, 留待处理
      * <p>
      * The only method that calls the TaskLink constructor.
      *
@@ -246,7 +247,7 @@ public final class Concept extends Item {
     /**
      * Add a new belief (or goal) into the table Sort the beliefs/goals by rank,
      * and remove redundant or low rank one
-     *
+     * 填充新的信念或目标到 table, 并移除多余的.
      * @param newSentence The judgment to be processed
      * @param table The table to be revised
      * @param capacity The capacity of the table
@@ -278,7 +279,7 @@ public final class Concept extends Item {
 
     /**
      * Evaluate a query against beliefs (and desires in the future)
-     *
+     * 评价,评估,找到最高质量的信念.
      * @param query The question to be processed
      * @param list The list of beliefs to be used
      * @return The best candidate belief selected
@@ -305,7 +306,7 @@ public final class Concept extends Item {
      * Insert a TaskLink into the TaskLink bag
      * <p>
      * called only from Memory.continuedProcess
-     *
+     * 把 TaskLink 加入到 TaskLink bag, 只在 Concept.directProcess 中处理.
      * @param taskLink The termLink to be inserted
      */
     public void insertTaskLink(TaskLink taskLink) {
@@ -407,7 +408,7 @@ public final class Concept extends Item {
     /**
      * Recalculate the quality of the concept [to be refined to show
      * extension/intension balance]
-     *
+     * 计算概念的的质量, 与平均优先级和复杂度相关
      * @return The quality value
      */
     @Override
