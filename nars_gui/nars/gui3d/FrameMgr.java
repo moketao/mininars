@@ -41,7 +41,8 @@ public class FrameMgr extends AbstractMessage {
     }
 
     public Frame3D get(int playIndex) {
-        if(timeLineFrames.size()==0) return null;
+        int size = timeLineFrames.size();
+        if(size==0 || playIndex>=size) return null;
         return timeLineFrames.get(playIndex);
     }
 }
