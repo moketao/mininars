@@ -95,8 +95,8 @@ public class TimeLine extends Slider {
 
         public void cursorMoved(CursorMotionEvent event, Spatial target, Spatial capture) {
             if (this.drag != null) {
-                Vector3f v1 = null;
-                Vector3f v2 = null;
+                Vector3f v1;
+                Vector3f v2;
 
                 v1 = new Vector3f(TimeLine.this.thumb.getSize().x * 0.5F, 0.0F, 0.0F);
                 v2 = v1.add(TimeLine.this.range.getSize().x - TimeLine.this.thumb.getSize().x * 0.5F, 0.0F, 0.0F);
