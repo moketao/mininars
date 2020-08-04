@@ -64,6 +64,9 @@ public class Show3D extends SimpleApplication{
     private FloatTxt3d floatTxt3d;
 
     FrameMgr frameMgr;
+    private Container container2dTopLeft;
+    private Container container2dTopRight;
+
     Show3D(AppState... initialStates){
         super(initialStates);
     }
@@ -202,21 +205,26 @@ public class Show3D extends SimpleApplication{
         BaseStyles.loadGlassStyle();
         GuiGlobals.getInstance().getStyles().setDefaultStyle("glass");
         GuiGlobals.getInstance().getStyles().setDefault(myFont);
-        Container myWindow = new Container();
-        guiNode.attachChild(myWindow);
-        myWindow.setLocalTranslation(1, settings.getHeight()-1, 0);
+        container2dTopLeft = new Container();
+        guiNode.attachChild(container2dTopLeft);
+        container2dTopLeft.setLocalTranslation(1, settings.getHeight()-1, 0);
+
+        container2dTopRight = new Container();
+        guiNode.attachChild(container2dTopRight);
+        container2dTopRight.setLocalTranslation(300, settings.getHeight()-3, 0);
+
         Label txt = new Label("设置: ");
         txt.setFontSize(15);
-        myWindow.addChild(txt);
+        container2dTopLeft.addChild(txt);
 
         Button resetCamBtn = new Button("摄像机归位");
         resetCamBtn.setFontSize(20);
-        myWindow.addChild(resetCamBtn);
+        container2dTopLeft.addChild(resetCamBtn);
         resetCamBtn.addClickCommands(source -> resetCam());
 
         Button showInfoBtn = new Button("显示/隐藏 OpenGL 信息");
         showInfoBtn.setFontSize(20);
-        myWindow.addChild(showInfoBtn);
+        container2dTopLeft.addChild(showInfoBtn);
         showInfoBtn.addClickCommands(source -> {
             showInfo = !showInfo;
             toggleInfo();
@@ -224,7 +232,7 @@ public class Show3D extends SimpleApplication{
 
         Button saveBtn = new Button("保存到 frames.dat");
         saveBtn.setFontSize(20);
-        myWindow.addChild(saveBtn);
+        container2dTopLeft.addChild(saveBtn);
         saveBtn.addClickCommands(source -> {
             try {
                 saveFramesToFile();
@@ -235,7 +243,7 @@ public class Show3D extends SimpleApplication{
 
         Button readBtn = new Button("读取 frames.dat");
         readBtn.setFontSize(20);
-        myWindow.addChild(readBtn);
+        container2dTopLeft.addChild(readBtn);
         readBtn.addClickCommands(source -> {
             try {
                 readFrameFromFile();
@@ -246,7 +254,7 @@ public class Show3D extends SimpleApplication{
 
         Button playBtn = new Button("播放");
         playBtn.setFontSize(20);
-        myWindow.addChild(playBtn);
+        container2dTopLeft.addChild(playBtn);
         playBtn.addClickCommands(source -> {
             play();
         });
@@ -257,6 +265,9 @@ public class Show3D extends SimpleApplication{
         selLabel.setTextVAlignment(VAlignment.Center);
         guiNode.attachChild(selLabel);
         updateTextDelay = 5;
+
+        TimeLine timeLine = new TimeLine();
+        container2dTopRight.addChild(timeLine);
     }
 
     private void toggleInfo() {
