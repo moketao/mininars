@@ -24,6 +24,10 @@ import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Container;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.style.BaseStyles;
+import com.wizzardo.jme.transition.EasingFunction;
+import com.wizzardo.jme.transition.SpatialChanges;
+import com.wizzardo.jme.transition.SpatialInterpolations;
+import com.wizzardo.jme.transition.TransitionControl;
 import nars.entity.*;
 import nars.language.Inheritance;
 import nars.language.Term;
@@ -369,11 +373,16 @@ public class Show3D extends SimpleApplication{
     }
 
     void addToRoot(Frame3D frame){
-        frame.item3d.geo.setLocalTranslation(FastMath.nextRandomFloat()*2f-1f,0.2f,FastMath.nextRandomFloat()*3f-1.5f);
+        Node geo = frame.item3d.geo;
+        geo.setLocalTranslation(FastMath.nextRandomFloat()*2f-1f,0.2f,FastMath.nextRandomFloat()*3f-1.5f);
         BillboardControl billboardControl = new BillboardControl();
         billboardControl.setAlignment(BillboardControl.Alignment.Camera);
-        frame.item3d.geo.addControl(billboardControl);
-        this.rootNode.attachChild(frame.item3d.geo);
+        geo.addControl(billboardControl);
+        this.rootNode.attachChild(geo);
+
+        geo.setLocalScale(0.1f);
+        // 缩放动画
+        geo.addControl(new TransitionControl(SpatialChanges.scale(geo), 0.35f, SpatialInterpolations.scaleTo(geo, 1f), EasingFunction.EASE_OUT_ELASTIC));
     }
 
     @Override
@@ -400,7 +409,9 @@ public class Show3D extends SimpleApplication{
             Frame3D frame = moveQueue.remove(moveQueue.size() - 1);
             if(frame==null) continue;
             if(frame!=null && frame.item3d!=null && frame.item3d.geo!=null){
-                frame.item3d.geo.setLocalTranslation(frame.endPos.x,frame.endPos.y,frame.endPos.z); // todo: 动画
+                // 缓动
+                Node geo = frame.item3d.geo;
+                geo.addControl(new TransitionControl(SpatialChanges.translation(geo), 0.35f, SpatialInterpolations.translateTo(geo, frame.endPos), EasingFunction.EASE_OUT_ELASTIC));
             }
         }
         super.simpleUpdate(tpf);
