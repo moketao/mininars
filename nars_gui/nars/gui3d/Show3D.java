@@ -5,19 +5,19 @@ import com.jme3.app.state.AppState;
 import com.jme3.app.state.ConstantVerifierState;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
+import com.jme3.effect.ParticleEmitter;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.material.Material;
+import com.jme3.material.RenderState;
 import com.jme3.math.*;
 import com.jme3.network.serializing.Serializer;
 import com.jme3.network.serializing.serializers.EnumSerializer;
-import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.control.BillboardControl;
-import com.jme3.scene.shape.Line;
 import com.jme3.system.AppSettings;
 import com.simsilica.lemur.*;
 import com.simsilica.lemur.Button;
@@ -45,13 +45,14 @@ public class Show3D extends SimpleApplication{
     public static final String UPDATE_CONCEPT_Y = "update concept Y"; //更新概念的高度
     public static final String REMOVE = "remove"; //删除
     private static FlyCamAppState flyCamAppState;
-    private ReasonerBatch reasoner;
     private Material matRed;
     private Material matGreen;
     private Material matBlue;
     private Material matDarkGray;
+    private Material matLine2D;
     private BitmapFont myFont;
-    private HashMap<Integer, Item3D> item3dMap = new HashMap<>();
+    public HashMap<String, Item3D> item3dMapByTermName = new HashMap<>();
+    public HashMap<Integer, Item3D> item3dMap = new HashMap<>();
     private HashMap<Integer, Item3D> itemMapForPlay = new HashMap<>();
     private ArrayList<Frame3D> frameQueue = new ArrayList<>();
     private ArrayList<Frame3D> moveQueue = new ArrayList<>();
@@ -79,7 +80,6 @@ public class Show3D extends SimpleApplication{
         flyCamAppState = new FlyCamAppState();
         app = new Show3D(new StatsAppState(), flyCamAppState ,new DebugKeysAppState(), new ConstantVerifierState());
         if(reasoner!=null){
-            app.reasoner = reasoner;
             app.memory = reasoner.getMemory();
         }
         AppSettings setting= new AppSettings(true);
@@ -135,6 +135,8 @@ public class Show3D extends SimpleApplication{
         matDarkGray = MiniUtil.createMat(ColorRGBA.DarkGray);
         matConcept = MiniUtil.createPngMat("./node.png");
         matTask = MiniUtil.createPngMat("./task.png");
+        matLine2D = MiniUtil.createPngMat("./line_01.png");
+        matLine2D.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.AlphaAdditive);
         matConceptSml = MiniUtil.createPngMat("./node_sml.png");
     }
     private void init3D() {
@@ -146,10 +148,7 @@ public class Show3D extends SimpleApplication{
         this.cam.setFrustumPerspective(45f, 1f, 0.1f, 1000f);
         this.lostFocusBehavior = LostFocusBehavior.Disabled;
         resetCam();
-        Line line = new Line(new Vector3f(0, 2.5f, 0.0f), new Vector3f(0f, 1.5f, 0f));
-        Geometry geomLine = new Geometry("Line", line);
-        geomLine.setMaterial(this.matDarkGray);
-        this.rootNode.attachChild(geomLine);
+        MiniUtil.putLine(0, 2.5f, 0.0f,0f, 1.5f, 0f,this.matDarkGray);
         MiniUtil.putArrow(Vector3f.ZERO, Vector3f.UNIT_X, matRed);
         MiniUtil.putArrow(Vector3f.ZERO, Vector3f.UNIT_Y, matGreen);
         MiniUtil.putArrow(Vector3f.ZERO, Vector3f.UNIT_Z, matBlue);
@@ -159,9 +158,10 @@ public class Show3D extends SimpleApplication{
 
         inputManager.addMapping("clickItem3D", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
         inputManager.addListener(actionListener, "clickItem3D");
-    }
-    private ActionListener actionListener = new ActionListener() {
 
+    }
+
+    private ActionListener actionListener = new ActionListener() {
         public void onAction(String binding, boolean keyPressed, float tpf) {
             if (binding.equals("clickItem3D") && !keyPressed) {
                 CollisionResults results = new CollisionResults();
@@ -263,6 +263,14 @@ public class Show3D extends SimpleApplication{
             play();
         });
 
+        Button playEffBtn = new Button("播放 eff");
+        playEffBtn.setFontSize(20);
+        container2dTopLeft.addChild(playEffBtn);
+        playEffBtn.addClickCommands(source -> {
+            ParticleEmitter effect = MiniUtil.createEffect("./flame.png", 4, 4, 0.8f);
+            effect.emitAllParticles();
+        });
+
         selLabel = new Label("当前未选中节点");
         selLabel.setFontSize(25);
         selLabel.setTextHAlignment(HAlignment.Center);
@@ -291,6 +299,7 @@ public class Show3D extends SimpleApplication{
         Frame3D frame = createFrameAnd3dObj(item,opt,null);
         frameQueue.add(frame); //先加到等待队列,等线程有空了再处理(放到场景中)
         frame.hashPlay = frame.item3d.geo.hashCode();
+        frame.termName = item.getKey();
         frameMgr.add(frame);
     }
 
@@ -378,6 +387,7 @@ public class Show3D extends SimpleApplication{
         BillboardControl billboardControl = new BillboardControl();
         billboardControl.setAlignment(BillboardControl.Alignment.Camera);
         geo.addControl(billboardControl);
+        item3dMapByTermName.put(frame.termName,frame.item3d);
         this.rootNode.attachChild(geo);
 
         geo.setLocalScale(0.1f);
@@ -409,9 +419,10 @@ public class Show3D extends SimpleApplication{
             Frame3D frame = moveQueue.remove(moveQueue.size() - 1);
             if(frame==null) continue;
             if(frame!=null && frame.item3d!=null && frame.item3d.geo!=null){
+                update3DLink(frame);
                 // 缓动
                 Node geo = frame.item3d.geo;
-                geo.addControl(new TransitionControl(SpatialChanges.translation(geo), 0.35f, SpatialInterpolations.translateTo(geo, frame.endPos), EasingFunction.EASE_OUT_ELASTIC));
+                geo.addControl(new ConceptAnimationCtrl(SpatialChanges.translation(geo), 0.35f, SpatialInterpolations.translateTo(geo, frame.endPos), EasingFunction.EASE_OUT_ELASTIC,frame));
             }
         }
         super.simpleUpdate(tpf);
@@ -431,7 +442,7 @@ public class Show3D extends SimpleApplication{
             moveOneConcept(B.getSubject(), B.getPredicate(),parentTask.getSentence().getTruth() );  // 动物被推动一次
 
             Inheritance B2 = (Inheritance) task.getSentence().getContent();
-            moveOneConcept(B2.getSubject(), B2.getPredicate(),task.getSentence().getTruth() );      // 因为 task 推出 '乌鸦是动物', 所以动物的高度会被继续推高一次
+            moveOneConcept(B2.getSubject(), B2.getPredicate(),task.getSentence().getTruth() );      // 因为 task 推出 '乌鸦是动物', 所以 '动物' 的高度会被继续推高一次
         }
     }
 
@@ -444,7 +455,7 @@ public class Show3D extends SimpleApplication{
             pushPower = baseY + truth.getExpectation();             // 基础高度 + 经验高度
         }
         Concept concept = memory.getConcept(target);
-        Item3D item3D2 = item3dMap.get(concept.hashCode());
+        Item3D item3D2 = item3dMap.get(concept.hashCode());         // todo: 全部改用 term name , 去掉 hashCode;
 
         HashMap<String, Float> valForHeight = item3D2.valForHeight; // 推高的力量集 (来自其它 concept )
         String key = memory.getConcept(push).getKey();              // 推者的 key
@@ -463,8 +474,38 @@ public class Show3D extends SimpleApplication{
         frame3D.endPos.set(posNow.x, sum, posNow.z);                // 将要移动到的位置
         frameMgr.add(frame3D);
         frame3D.hashPlay = frame3D.item3d.geo.hashCode();
+        frame3D.targetName = concept.getKey();
+        frame3D.pushName = memory.getConcept(push).getKey();
         moveQueue.add(frame3D);
+
+        frame3D.link3dKey = getMergeKey(frame3D.pushName,frame3D.targetName);
     }
+
+    private String getMergeKey(String hashPlay, String hashPush) {
+        int i = hashPlay.compareTo(hashPush);
+        String link3dKey = i>0 ? (hashPlay+"---"+hashPush) : (hashPush+"---"+hashPlay);
+        return link3dKey;
+    }
+
+    HashMap<String,Node> linksmap = new HashMap<>();
+    public void update3DLink(Frame3D frame) {
+        Node node = linksmap.get(frame.link3dKey);
+        Item3D item3DPush = item3dMapByTermName.get(frame.pushName);
+        Item3D item3DTarget = item3dMapByTermName.get(frame.targetName);
+        if(item3DTarget!=null && item3DPush!=null && item3DTarget.geo!=null && item3DPush.geo!=null){
+            Vector3f endPos = item3DTarget.geo.getLocalTranslation();
+            Vector3f startPos = item3DPush.geo.getLocalTranslation();
+            if (node==null){
+                node = MiniUtil.putLine2D(matLine2D, startPos, endPos, 0.2f);
+                linksmap.put(frame.link3dKey,node);
+            }else{
+                LineControl ctrl = node.getUserData("ctrl");
+                ctrl.setPoint(0,startPos);
+                ctrl.setPoint(1,endPos);
+            }
+        }
+    }
+
     int playIndex = -1;
     private void play() {
         playIndex++;

@@ -1,6 +1,8 @@
 package nars.gui3d;
 
 import com.jme3.asset.AssetManager;
+import com.jme3.effect.ParticleEmitter;
+import com.jme3.effect.ParticleMesh;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.font.Rectangle;
@@ -9,32 +11,43 @@ import com.jme3.material.RenderState;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue;
-import com.jme3.scene.Geometry;
-import com.jme3.scene.Mesh;
-import com.jme3.scene.Node;
+import com.jme3.scene.*;
 import com.jme3.scene.debug.Arrow;
 import com.jme3.scene.debug.Grid;
+import com.jme3.scene.shape.Line;
 import com.jme3.scene.shape.Quad;
 import com.jme3.texture.Texture;
 
 public class MiniUtil {
+    static float[] colorArray = new float[4*4];
     private static float nodeWidth = 0.5f;
-    private static float taskWidth = 0.5f;
-    private static RenderQueue.Bucket renderQueue = RenderQueue.Bucket.Transparent;;
     public static Node rootNode;
     private static AssetManager assetManager;
 
     public static void init(Node root,AssetManager assetManager){
         rootNode = root;
         MiniUtil.assetManager = assetManager;
+
+        int colorIndex = 0;
+
+        for(int i = 0; i < 4; i++){
+            colorArray[colorIndex++]= 1f;
+            colorArray[colorIndex++]= 1f;
+            colorArray[colorIndex++]= 1f;
+            colorArray[colorIndex++]= 1f;
+        }
     }
     public static BitmapText create3dtxt(BitmapFont myFont, String str) {
         BitmapText txt = new BitmapText(myFont, false);
         txt.setBox(new Rectangle(0.0F, 0.0F, 6.0F, 3.0F));
-        txt.setQueueBucket(RenderQueue.Bucket.Transparent);
+        setQueue(txt);
         txt.setSize(0.5F);
         txt.setText(str);
         return txt;
+    }
+
+    public static void setQueue(Spatial ob) {
+        ob.setQueueBucket(RenderQueue.Bucket.Transparent);
     }
 
     public static Geometry putShape(Mesh shape, Material mat) {
@@ -64,21 +77,73 @@ public class MiniUtil {
         return m;
     }
     public static Material createPngMat(String pngPath){
-        Material m = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        Material m = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
         Texture textureNode = assetManager.loadTexture( pngPath );
-        m.setTexture("ColorMap",textureNode);
+        m.setTexture("Texture", textureNode);
         m.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
         return m;
     }
 
-    public static Node create3dObject(String obName, Material matTerm) {
+    public static Node create3dObject(String obName, Material mat) {
         Quad quad = new Quad(nodeWidth,nodeWidth);
         Geometry g = new Geometry("g", quad);
-        g.setMaterial(matTerm);
-        g.setQueueBucket(renderQueue);
+        g.setMaterial(mat);
+        toNormalColor(g);
         Node pivot = new Node(obName);
         pivot.attachChild(g);
         g.setLocalTranslation(nodeWidth*-0.5f,nodeWidth*-0.5f,0);
+        setQueue(pivot);
         return pivot;
+    }
+
+    public static void putLine(float x1, float y1, float z1, float x2, float y2 , float z2, Material mat) {
+        Line line = new Line(new Vector3f(x1, y1, z1), new Vector3f(x2, y2, z2));
+        Geometry geomLine = new Geometry("Line", line);
+        geomLine.setMaterial(mat);
+        rootNode.attachChild(geomLine);
+    }
+    public static ParticleEmitter createEffect(String imgFileName , int imgsX , int imgsY, float liftTime) {
+        ParticleEmitter effect;
+        effect = new ParticleEmitter("Flame", ParticleMesh.Type.Triangle, 1);
+        effect.setStartColor(new ColorRGBA(1f, 1f, 1f, 1f));
+        effect.setEndColor(new ColorRGBA(.4f, .22f, .12f, 0f));
+        effect.setStartSize(1f);
+        effect.setEndSize(1f);
+        effect.setParticlesPerSec(0);
+        effect.setGravity(0, 0, 0);
+        effect.setLowLife(liftTime);
+        effect.setHighLife(liftTime);
+        effect.setImagesX(imgsX);
+        effect.setImagesY(imgsY);
+        Material pngMat = MiniUtil.createPngMat(imgFileName);
+        effect.setMaterial(pngMat);
+        Node node = new Node();
+        node.attachChild(effect);
+        MiniUtil.setQueue(node);
+        rootNode.attachChild(node);
+        return effect;
+    }
+
+    public static Node putLine2D(Material mat , Vector3f startPos, Vector3f endPos, float lineWidth) {
+        Geometry geo = new Geometry("lineGeo",new Quad(1,1));
+        geo.setMaterial(mat);
+        LineControl lineControl = new LineControl(new LineControl.Algo2CamPosBBNormalized(), true);
+        geo.addControl(lineControl);
+        Vector3f v1 = new Vector3f(); v1.set(startPos);
+        Vector3f v2 = new Vector3f(); v2.set(endPos);
+        toNormalColor(geo);
+        lineControl.addPoint(v1,lineWidth);
+        lineControl.addPoint(v2,lineWidth);
+        Node node = new Node();
+        node.setUserData("ctrl",lineControl);
+        node.attachChild(geo);
+        setQueue(node);
+        rootNode.attachChild(node);
+        return node;
+    }
+
+    /** 修正粒子材质默认为红色的问题 */
+    private static void toNormalColor(Geometry geo) {
+        geo.getMesh().setBuffer(VertexBuffer.Type.Color, 4, colorArray);
     }
 }

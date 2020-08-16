@@ -45,4 +45,10 @@ public class Frame3D extends AbstractMessage {
     /** 在某一帧中从头至尾做动画, 完成了多少, 0 是刚开始, 1 是结束 , 这个值不会被保存*/
     public float xInFrame;
 
+    /** 两个概念之间的 3d 树突对象 的 key */
+    public String link3dKey;
+
+    public String pushName;
+    public String targetName;
+    public String termName;
 }
