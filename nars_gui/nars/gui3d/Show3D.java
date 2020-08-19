@@ -85,7 +85,8 @@ public class Show3D extends SimpleApplication{
         AppSettings setting= new AppSettings(true);
         setting.setResizable(true);
         setting.setTitle("3d Win");
-        setting.setWidth(1024);
+        setting.setWidth(1524);
+        setting.setHeight(924);
         setting.setAudioRenderer(null);
         setting.setVSync(false);
         app.setSettings(setting);
@@ -142,7 +143,7 @@ public class Show3D extends SimpleApplication{
     private void init3D() {
         app.settings.setTitle("3d win");
         flyCamAppState.getCamera().setDragToRotate(true);
-        flyCamAppState.getCamera().setMoveSpeed(4.6f);
+        flyCamAppState.getCamera().setMoveSpeed(0.2f);
         flyCamAppState.getCamera().setZoomSpeed(12f);
         this.cam.setParallelProjection(false);
         this.cam.setFrustumPerspective(45f, 1f, 0.1f, 1000f);
@@ -159,6 +160,14 @@ public class Show3D extends SimpleApplication{
         inputManager.addMapping("clickItem3D", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
         inputManager.addListener(actionListener, "clickItem3D");
 
+        //test();
+    }
+
+    private void test() {
+        Node abc = MiniUtil.create3dObject("测试闪电", matLine2D);
+        abc.setLocalScale(4,0.5f,1);
+        abc.setLocalTranslation(1,1f,4f);
+        rootNode.attachChild(abc);
     }
 
     private ActionListener actionListener = new ActionListener() {
@@ -195,7 +204,7 @@ public class Show3D extends SimpleApplication{
 
     private void createTxt3d() {
         BitmapText txt = MiniUtil.create3dtxt(myFont, "WASD移动摄像机\n拖拽左键可旋转摄像机");
-        txt.setLocalTranslation(0,2f,-6f);
+        txt.setLocalTranslation(0,2f,-16f);
         this.rootNode.attachChild(txt);
     }
     private void createFloatTxt3d() {
@@ -263,11 +272,25 @@ public class Show3D extends SimpleApplication{
             play();
         });
 
-        Button playEffBtn = new Button("播放 eff");
+        Button playBtn11 = new Button("cam speed 0.2f");
+        playBtn11.setFontSize(20);
+        container2dTopLeft.addChild(playBtn11);
+        playBtn11.addClickCommands(source -> {
+            flyCamAppState.getCamera().setMoveSpeed(0.2f);
+        });
+
+        Button playBtn22 = new Button("cam speed 1.2f");
+        playBtn22.setFontSize(20);
+        container2dTopLeft.addChild(playBtn22);
+        playBtn22.addClickCommands(source -> {
+            flyCamAppState.getCamera().setMoveSpeed(1.2f);
+        });
+
+        Button playEffBtn = new Button("播放 测试 特效 eff");
         playEffBtn.setFontSize(20);
         container2dTopLeft.addChild(playEffBtn);
         playEffBtn.addClickCommands(source -> {
-            ParticleEmitter effect = MiniUtil.createEffect("./flame.png", 4, 4, 0.8f);
+            ParticleEmitter effect = MiniUtil.createEffect("./flame.png", 4, 4, 3.8f);
             effect.emitAllParticles();
         });
 
@@ -392,9 +415,9 @@ public class Show3D extends SimpleApplication{
 
         geo.setLocalScale(0.1f);
         // 缩放动画
-        geo.addControl(new TransitionControl(SpatialChanges.scale(geo), 0.35f, SpatialInterpolations.scaleTo(geo, 1f), EasingFunction.EASE_OUT_ELASTIC));
+        geo.addControl(new TransitionControl(SpatialChanges.scale(geo), 1.65f, SpatialInterpolations.scaleTo(geo, 1f), EasingFunction.EASE_OUT_ELASTIC));
     }
-
+    //private HashMap<ConceptAnimationCtrl, HashMap<Integer,Item3D>> linkDic = new HashMap<>();//todo: 改成 key:item3d value:link
     @Override
     public void simpleUpdate(float tpf) {
         if(updateTextDelay>0){
@@ -419,10 +442,23 @@ public class Show3D extends SimpleApplication{
             Frame3D frame = moveQueue.remove(moveQueue.size() - 1);
             if(frame==null) continue;
             if(frame!=null && frame.item3d!=null && frame.item3d.geo!=null){
-                update3DLink(frame);
-                // 缓动
                 Node geo = frame.item3d.geo;
-                geo.addControl(new ConceptAnimationCtrl(SpatialChanges.translation(geo), 0.35f, SpatialInterpolations.translateTo(geo, frame.endPos), EasingFunction.EASE_OUT_ELASTIC,frame));
+                ConceptAnimationCtrl link = new ConceptAnimationCtrl(SpatialChanges.translation(geo), 0.35f, SpatialInterpolations.translateTo(geo, frame.endPos), EasingFunction.EASE_OUT_ELASTIC, frame);
+//                Item3D item3DPush = item3dMapByTermName.get(frame.pushName);
+//                Item3D item3DTarget = item3dMapByTermName.get(frame.targetName);
+//                HashMap<Integer, Item3D> v = linkDic.get(link);
+//                if(v==null){
+//                    HashMap<Integer, Item3D> def = new HashMap<>();
+//                    linkDic.put(link, def);
+//                    v=def;
+//                }
+//                v.put(item3DPush.hashCode(),item3DPush);
+//                v.put(item3DTarget.hashCode(),item3DTarget);
+
+                update3DLink(frame);
+
+                // 缓动
+                geo.addControl(link);
             }
         }
         super.simpleUpdate(tpf);
@@ -447,7 +483,7 @@ public class Show3D extends SimpleApplication{
     }
 
     private void moveOneConcept(Term push,Term target, TruthValue truth) {
-        Float baseY = 1f;
+        Float baseY = 3f;
         Float pushPower;
         if(truth.getConfidence()<0.5){
             pushPower = baseY;                                      // 信心不足就不推了, 只给基础高度 1
