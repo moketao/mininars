@@ -30,9 +30,6 @@ public class Frame3D extends AbstractMessage {
     /** 材质类型 */
     public MatType mat;
 
-    /** hash code for play */
-    public int hashPlay;
-
     /** NARS 中的 Item.key */
     public String key;
 
@@ -50,5 +47,4 @@ public class Frame3D extends AbstractMessage {
 
     public String pushName;
     public String targetName;
-    public String termName;
 }

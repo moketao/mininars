@@ -19,11 +19,9 @@ public class Frame3DSerializer extends Serializer {
         frame3D.type = (ItemTYPE) Serializer.readClassAndObject(byteBuffer);
         frame3D.key = (String) Serializer.readClassAndObject(byteBuffer);
         frame3D.mat = (MatType) Serializer.readClassAndObject(byteBuffer);
-        frame3D.hashPlay = (int) Serializer.readClassAndObject(byteBuffer);
         frame3D.link3dKey = (String) Serializer.readClassAndObject(byteBuffer);
         frame3D.targetName = (String) Serializer.readClassAndObject(byteBuffer);
         frame3D.pushName = (String) Serializer.readClassAndObject(byteBuffer);
-        frame3D.termName = (String) Serializer.readClassAndObject(byteBuffer);
 
         return (T) frame3D;
     }
@@ -39,10 +37,8 @@ public class Frame3DSerializer extends Serializer {
         Serializer.writeClassAndObject(byteBuffer,frame3D.type);
         Serializer.writeClassAndObject(byteBuffer,frame3D.key);
         Serializer.writeClassAndObject(byteBuffer,frame3D.mat);
-        Serializer.writeClassAndObject(byteBuffer,frame3D.hashPlay);
         Serializer.writeClassAndObject(byteBuffer,frame3D.link3dKey);
         Serializer.writeClassAndObject(byteBuffer,frame3D.targetName);
         Serializer.writeClassAndObject(byteBuffer,frame3D.pushName);
-        Serializer.writeClassAndObject(byteBuffer,frame3D.termName);
     }
 }

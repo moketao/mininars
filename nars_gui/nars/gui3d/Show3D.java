@@ -39,11 +39,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Show3D extends SimpleApplication{
-    public static final String INSERT_CONCEPT = "insert concept"; //生成概念/插入概念
-    public static final String INSERT_TASK = "insert task"; //生成任务/插入任务
-    public static final String DERIVED = "derived task"; //衍生任务/分解任务
-    public static final String UPDATE_CONCEPT_Y = "update concept Y"; //更新概念的高度
-    public static final String REMOVE = "remove"; //删除
+
+    public  HashMap<String, Item3D> item3dMap       =   new HashMap<>();
+    private HashMap<String, Item3D> itemMapForPlay  =   new HashMap<>();
+    private ArrayList<Frame3D>      frameQueue      =   new ArrayList<>();
+    private ArrayList<Frame3D>      moveQueue       =   new ArrayList<>();
+
+    public static final String INSERT_CONCEPT = "Concept";      // 生成概念/插入概念
+    public static final String INSERT_TASK = "BigTask";         // 生成任务/插入任务
+    public static final String DERIVED = "Task";                // 衍生任务/分解任务
+    public static final String PUSH_CONCEPT_Y = "PushConcept";  // 更新概念的高度
+    public static final String REMOVE = "remove";               // 删除
+
     private static FlyCamAppState flyCamAppState;
     private Material matRed;
     private Material matGreen;
@@ -51,11 +58,6 @@ public class Show3D extends SimpleApplication{
     private Material matDarkGray;
     private Material matLine2D;
     private BitmapFont myFont;
-    public HashMap<String, Item3D> item3dMapByTermName = new HashMap<>();
-    public HashMap<Integer, Item3D> item3dMap = new HashMap<>();
-    private HashMap<Integer, Item3D> itemMapForPlay = new HashMap<>();
-    private ArrayList<Frame3D> frameQueue = new ArrayList<>();
-    private ArrayList<Frame3D> moveQueue = new ArrayList<>();
     private boolean showInfo = false;
     private Material matConcept;
     private Material matTask;
@@ -159,15 +161,6 @@ public class Show3D extends SimpleApplication{
 
         inputManager.addMapping("clickItem3D", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
         inputManager.addListener(actionListener, "clickItem3D");
-
-        //test();
-    }
-
-    private void test() {
-        Node abc = MiniUtil.create3dObject("测试闪电", matLine2D);
-        abc.setLocalScale(4,0.5f,1);
-        abc.setLocalTranslation(1,1f,4f);
-        rootNode.attachChild(abc);
     }
 
     private ActionListener actionListener = new ActionListener() {
@@ -321,27 +314,27 @@ public class Show3D extends SimpleApplication{
         if(!online) return;
         Frame3D frame = createFrameAnd3dObj(item,opt,null);
         frameQueue.add(frame); //先加到等待队列,等线程有空了再处理(放到场景中)
-        frame.hashPlay = frame.item3d.geo.hashCode();
-        frame.termName = item.getKey();
+        frame.targetName = item.getKey();
         frameMgr.add(frame);
     }
 
     public <E extends Item> void remove(E overflowItem) {
         if(overflowItem==null)return;
-        Item3D item3D = item3dMap.get(overflowItem.hashCode());
+        String key = overflowItem.getKey();
+        Item3D item3D = item3dMap.get(key);
         if(item3D==null)return;
         willRemove.add(item3D);
         Frame3D frame3D = new Frame3D();
         frame3D.opt = REMOVE;
         frame3D.item3d = item3D;
-        frame3D.hashPlay = item3D.geo.hashCode();
+        frame3D.targetName = key;
         frameMgr.add(frame3D);
     }
-    Item3D getItem3D(int hash){
-        Item3D item3D = item3dMap.get(hash);
+    Item3D getItem3D(String key){
+        Item3D item3D = item3dMap.get(key);
         if(item3D==null){
             item3D = new Item3D();
-            item3dMap.put(hash,item3D);
+            item3dMap.put(key,item3D);
         }
         return item3D;
     }
@@ -349,16 +342,17 @@ public class Show3D extends SimpleApplication{
         boolean b = item instanceof Concept;
         Frame3D frame3D;
         Item3D item3D;
-        int hash;
+        String key;
         if(item == null){
             frame3D = _frame3D;
             item3D = new Item3D();
-            hash = frame3D.hashCode();
-            item3dMap.put(hash,item3D);
+            key = _frame3D.targetName;
+            item3dMap.put(key,item3D);
         }else{
             frame3D = new Frame3D();
-            hash = item.hashCode();
-            item3D = getItem3D(hash);
+            key = item.getKey();
+            // todo: 检查 key 为 null 的情况.
+            item3D = getItem3D(key);
         }
         frame3D.type = b?ItemTYPE.Concept:ItemTYPE.Task;
         setMat(item,frame3D);
@@ -368,7 +362,7 @@ public class Show3D extends SimpleApplication{
             frame3D.item = item;
             frame3D.key = item==null?frame3D.key:item.getKey();
             item3D.geo = MiniUtil.create3dObject(opt+" "+frame3D.key, mat);
-            item3dMap.put(hash,item3D);
+            item3dMap.put(key,item3D);
         }
         frame3D.item3d = item3D;
         frame3D.opt = opt;
@@ -410,14 +404,13 @@ public class Show3D extends SimpleApplication{
         BillboardControl billboardControl = new BillboardControl();
         billboardControl.setAlignment(BillboardControl.Alignment.Camera);
         geo.addControl(billboardControl);
-        item3dMapByTermName.put(frame.termName,frame.item3d);
         this.rootNode.attachChild(geo);
 
         geo.setLocalScale(0.1f);
+
         // 缩放动画
         geo.addControl(new TransitionControl(SpatialChanges.scale(geo), 1.65f, SpatialInterpolations.scaleTo(geo, 1f), EasingFunction.EASE_OUT_ELASTIC));
     }
-    //private HashMap<ConceptAnimationCtrl, HashMap<Integer,Item3D>> linkDic = new HashMap<>();//todo: 改成 key:item3d value:link
     @Override
     public void simpleUpdate(float tpf) {
         if(updateTextDelay>0){
@@ -443,17 +436,14 @@ public class Show3D extends SimpleApplication{
             if(frame==null) continue;
             if(frame!=null && frame.item3d!=null && frame.item3d.geo!=null){
                 Node geo = frame.item3d.geo;
-                ConceptAnimationCtrl link = new ConceptAnimationCtrl(SpatialChanges.translation(geo), 0.35f, SpatialInterpolations.translateTo(geo, frame.endPos), EasingFunction.EASE_OUT_ELASTIC, frame);
-//                Item3D item3DPush = item3dMapByTermName.get(frame.pushName);
-//                Item3D item3DTarget = item3dMapByTermName.get(frame.targetName);
-//                HashMap<Integer, Item3D> v = linkDic.get(link);
-//                if(v==null){
-//                    HashMap<Integer, Item3D> def = new HashMap<>();
-//                    linkDic.put(link, def);
-//                    v=def;
-//                }
-//                v.put(item3DPush.hashCode(),item3DPush);
-//                v.put(item3DTarget.hashCode(),item3DTarget);
+                ConceptAnimationCtrl link = new ConceptAnimationCtrl(SpatialChanges.translation(geo), 0.35f, SpatialInterpolations.translateTo(geo, frame.endPos), EasingFunction.EASE_OUT_QUART, frame);
+
+                Item3D item3DPush = item3dMap.get(frame.pushName);
+                Item3D item3DTarget = item3dMap.get(frame.targetName);
+
+                HashMap<String, Item3D> items = Link3dMgr.getItemsByLinkey(frame.link3dKey);
+                items.put(frame.pushName,item3DPush);
+                items.put(frame.targetName,item3DTarget);
 
                 update3DLink(frame);
 
@@ -490,11 +480,10 @@ public class Show3D extends SimpleApplication{
         }else{
             pushPower = baseY + truth.getExpectation();             // 基础高度 + 经验高度
         }
-        Concept concept = memory.getConcept(target);
-        Item3D item3D2 = item3dMap.get(concept.hashCode());         // todo: 全部改用 term name , 去掉 hashCode;
+        Item3D item3D2 = item3dMap.get(target.getName());
 
         HashMap<String, Float> valForHeight = item3D2.valForHeight; // 推高的力量集 (来自其它 concept )
-        String key = memory.getConcept(push).getKey();              // 推者的 key
+        String key = push.getName();                                // 推者的 key
         valForHeight.put(key,pushPower);                            // 记录当前信仰受到的推力
 
         Float sum = 0f;                                             // 推力汇总 , todo: 是否要用到 UtilityFunctions.aveGeo ?
@@ -504,36 +493,28 @@ public class Show3D extends SimpleApplication{
         }
         Frame3D frame3D = new Frame3D();
         frame3D.item3d = item3D2;
-        frame3D.opt = UPDATE_CONCEPT_Y;                             // 标注这次的操作是: 更新高度
+        frame3D.opt = PUSH_CONCEPT_Y;                             // 标注这次的操作是: 更新高度
         Vector3f posNow = frame3D.item3d.geo.getLocalTranslation(); // 当前位置
         frame3D.startPos.set(posNow);
         frame3D.endPos.set(posNow.x, sum, posNow.z);                // 将要移动到的位置
         frameMgr.add(frame3D);
-        frame3D.hashPlay = frame3D.item3d.geo.hashCode();
-        frame3D.targetName = concept.getKey();
+        frame3D.targetName = key;
         frame3D.pushName = memory.getConcept(push).getKey();
         moveQueue.add(frame3D);
 
-        frame3D.link3dKey = getMergeKey(frame3D.pushName,frame3D.targetName);
+        frame3D.link3dKey = Link3dMgr.createKey(frame3D.pushName,frame3D.targetName);
     }
 
-    private String getMergeKey(String hashPlay, String hashPush) {
-        int i = hashPlay.compareTo(hashPush);
-        String link3dKey = i>0 ? (hashPlay+"---"+hashPush) : (hashPush+"---"+hashPlay);
-        return link3dKey;
-    }
-
-    HashMap<String,Node> linksmap = new HashMap<>();
     public void update3DLink(Frame3D frame) {
-        Node node = linksmap.get(frame.link3dKey);
-        Item3D item3DPush = item3dMapByTermName.get(frame.pushName);
-        Item3D item3DTarget = item3dMapByTermName.get(frame.targetName);
+        Node node = Link3dMgr.get(frame.link3dKey);
+        Item3D item3DPush = item3dMap.get(frame.pushName);
+        Item3D item3DTarget = item3dMap.get(frame.targetName);
         if(item3DTarget!=null && item3DPush!=null && item3DTarget.geo!=null && item3DPush.geo!=null){
             Vector3f endPos = item3DTarget.geo.getLocalTranslation();
             Vector3f startPos = item3DPush.geo.getLocalTranslation();
             if (node==null){
                 node = MiniUtil.putLine2D(matLine2D, startPos, endPos, 0.2f);
-                linksmap.put(frame.link3dKey,node);
+                Link3dMgr.put(frame.link3dKey,node);
             }else{
                 LineControl ctrl = node.getUserData("ctrl");
                 ctrl.setPoint(0,startPos);
@@ -552,26 +533,38 @@ public class Show3D extends SimpleApplication{
             System.out.println("播放帧已用完");
             return;
         }
-        if(frame3D.item3d==null && !frame3D.opt.equals(REMOVE) && !frame3D.opt.equals(UPDATE_CONCEPT_Y)) {
-            createFrameAnd3dObj(null, frame3D.opt, frame3D);
-            addToRoot(frame3D);
-            itemMapForPlay.put(frame3D.hashPlay,frame3D.item3d);
-            return;
-        }
-        if(frame3D.opt.equals(UPDATE_CONCEPT_Y)){
-            frame3D.xInFrame = xInFrame;
-            Item3D item3D = itemMapForPlay.get(frame3D.hashPlay);
-            frame3D.item3d = item3D;
-            moveQueue.add(frame3D);
-        }else{
-            if(frame3D.opt.equals(REMOVE)){
-                Item3D item3D = itemMapForPlay.get(frame3D.hashPlay);
+
+        switch (frame3D.opt){
+            case INSERT_TASK:
+            case INSERT_CONCEPT:
+            case DERIVED:{
+                // 添加
+                createFrameAnd3dObj(null, frame3D.opt, frame3D);
+                addToRoot(frame3D);
+                itemMapForPlay.put(frame3D.targetName,frame3D.item3d);
+                break;
+            }
+            case REMOVE:{
+                // 移除
+                Item3D item3D = itemMapForPlay.get(frame3D.targetName);
                 if(item3D!=null){
                     frame3D.item3d = item3D;
                     willRemove.add(frame3D.item3d);
                 }else{
                     System.out.println("要移除的对象不存在");
                 }
+                break;
+            }
+            case PUSH_CONCEPT_Y:{
+                // 升高
+                frame3D.xInFrame = xInFrame;
+                Item3D item3D = itemMapForPlay.get(frame3D.targetName);
+                frame3D.item3d = item3D;
+                moveQueue.add(frame3D);
+                break;
+            }
+            default:{
+                throw new Error("未处理的 opt ");
             }
         }
     }
