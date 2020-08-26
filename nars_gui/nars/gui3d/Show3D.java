@@ -498,8 +498,8 @@ public class Show3D extends SimpleApplication{
         frame3D.startPos.set(posNow);
         frame3D.endPos.set(posNow.x, sum, posNow.z);                // 将要移动到的位置
         frameMgr.add(frame3D);
-        frame3D.targetName = key;
-        frame3D.pushName = memory.getConcept(push).getKey();
+        frame3D.targetName = target.getName();
+        frame3D.pushName = key;
         moveQueue.add(frame3D);
 
         frame3D.link3dKey = Link3dMgr.createKey(frame3D.pushName,frame3D.targetName);
