@@ -17,6 +17,10 @@ import com.jme3.scene.debug.Grid;
 import com.jme3.scene.shape.Line;
 import com.jme3.scene.shape.Quad;
 import com.jme3.texture.Texture;
+import com.simsilica.lemur.Button;
+import com.simsilica.lemur.Command;
+import com.simsilica.lemur.Container;
+import com.simsilica.lemur.HAlignment;
 
 public class MiniUtil {
     static float[] colorArray = new float[4*4];
@@ -124,26 +128,17 @@ public class MiniUtil {
         return effect;
     }
 
-    public static Node putLine2D(Material mat , Vector3f startPos, Vector3f endPos, float lineWidth) {
-        Geometry geo = new Geometry("lineGeo",new Quad(1,1));
-        geo.setMaterial(mat);
-        LineControl lineControl = new LineControl(new LineControl.Algo2CamPosBBNormalized(), true);
-        geo.addControl(lineControl);
-        Vector3f v1 = new Vector3f(); v1.set(startPos);
-        Vector3f v2 = new Vector3f(); v2.set(endPos);
-        toNormalColor(geo);
-        lineControl.addPoint(v1,lineWidth);
-        lineControl.addPoint(v2,lineWidth);
-        Node node = new Node();
-        node.setUserData("ctrl",lineControl);
-        node.attachChild(geo);
-        setQueue(node);
-        rootNode.attachChild(node);
-        return node;
+    /** 修正粒子材质默认为红色的问题 */
+    public static void toNormalColor(Geometry geo) {
+        geo.getMesh().setBuffer(VertexBuffer.Type.Color, 4, colorArray);
     }
 
-    /** 修正粒子材质默认为红色的问题 */
-    private static void toNormalColor(Geometry geo) {
-        geo.getMesh().setBuffer(VertexBuffer.Type.Color, 4, colorArray);
+    /** 创建按钮 */
+    public static void Btn(String title, int fontSize, Container container2dTopLeft , Command command) {
+        Button playBtn = new Button(title);
+        //playBtn.setTextHAlignment(HAlignment.Center);
+        playBtn.setFontSize(fontSize);
+        container2dTopLeft.addChild(playBtn);
+        playBtn.addClickCommands(command);
     }
 }

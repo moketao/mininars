@@ -20,7 +20,6 @@ import com.jme3.scene.Node;
 import com.jme3.scene.control.BillboardControl;
 import com.jme3.system.AppSettings;
 import com.simsilica.lemur.*;
-import com.simsilica.lemur.Button;
 import com.simsilica.lemur.Container;
 import com.simsilica.lemur.Label;
 import com.simsilica.lemur.style.BaseStyles;
@@ -71,7 +70,7 @@ public class Show3D extends SimpleApplication{
     private FloatTxt3d floatTxt3d;
 
     FrameMgr frameMgr;
-    private Container container2dTopLeft;
+    private Container menu;
     private Container container2dTopRight;
 
     Show3D(AppState... initialStates){
@@ -110,6 +109,7 @@ public class Show3D extends SimpleApplication{
         init3D();
         initGUI();
         toggleInfo();
+        readFrameFromFile();
     }
     public void initializeSerializable() {
         Serializer.registerClass(Item3D.class);
@@ -120,12 +120,20 @@ public class Show3D extends SimpleApplication{
         Serializer.registerClass(MatType.class,new EnumSerializer());
     }
 
-    void readFrameFromFile() throws IOException {
-        app.frameMgr.read();
+    void readFrameFromFile() {
+        try {
+            app.frameMgr.read();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         setTips("已从"+FrameMgr.path+" 读取数据, len:"+app.frameMgr.timeLineFrames.size());
     }
-    private void saveFramesToFile() throws IOException {
-        app.frameMgr.save();
+    private void saveFramesToFile() {
+        try {
+            app.frameMgr.save();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         setTips("已保存到"+FrameMgr.path+", len:"+app.frameMgr.timeLineFrames.size());
     }
 
@@ -145,7 +153,7 @@ public class Show3D extends SimpleApplication{
     private void init3D() {
         app.settings.setTitle("3d win");
         flyCamAppState.getCamera().setDragToRotate(true);
-        flyCamAppState.getCamera().setMoveSpeed(0.2f);
+        flyCamAppState.getCamera().setMoveSpeed(1.2f);
         flyCamAppState.getCamera().setZoomSpeed(12f);
         this.cam.setParallelProjection(false);
         this.cam.setFrustumPerspective(45f, 1f, 0.1f, 1000f);
@@ -206,86 +214,10 @@ public class Show3D extends SimpleApplication{
     }
 
     private void initGUI() {
-
         GuiGlobals.initialize(this);
         BaseStyles.loadGlassStyle();
         GuiGlobals.getInstance().getStyles().setDefaultStyle("glass");
         GuiGlobals.getInstance().getStyles().setDefault(myFont);
-        container2dTopLeft = new Container();
-        guiNode.attachChild(container2dTopLeft);
-        container2dTopLeft.setLocalTranslation(1, settings.getHeight()-1, 0);
-
-        container2dTopRight = new Container();
-        guiNode.attachChild(container2dTopRight);
-        container2dTopRight.setLocalTranslation(300, settings.getHeight()-3, 0);
-
-        Label txt = new Label("设置: ");
-        txt.setFontSize(15);
-        container2dTopLeft.addChild(txt);
-
-        Button resetCamBtn = new Button("摄像机归位");
-        resetCamBtn.setFontSize(20);
-        container2dTopLeft.addChild(resetCamBtn);
-        resetCamBtn.addClickCommands(source -> resetCam());
-
-        Button showInfoBtn = new Button("显示/隐藏 OpenGL 信息");
-        showInfoBtn.setFontSize(20);
-        container2dTopLeft.addChild(showInfoBtn);
-        showInfoBtn.addClickCommands(source -> {
-            showInfo = !showInfo;
-            toggleInfo();
-        });
-
-        Button saveBtn = new Button("保存到 frames.dat");
-        saveBtn.setFontSize(20);
-        container2dTopLeft.addChild(saveBtn);
-        saveBtn.addClickCommands(source -> {
-            try {
-                saveFramesToFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-
-        Button readBtn = new Button("读取 frames.dat");
-        readBtn.setFontSize(20);
-        container2dTopLeft.addChild(readBtn);
-        readBtn.addClickCommands(source -> {
-            try {
-                readFrameFromFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-
-        Button playBtn = new Button("播放");
-        playBtn.setFontSize(20);
-        container2dTopLeft.addChild(playBtn);
-        playBtn.addClickCommands(source -> {
-            play();
-        });
-
-        Button playBtn11 = new Button("cam speed 0.2f");
-        playBtn11.setFontSize(20);
-        container2dTopLeft.addChild(playBtn11);
-        playBtn11.addClickCommands(source -> {
-            flyCamAppState.getCamera().setMoveSpeed(0.2f);
-        });
-
-        Button playBtn22 = new Button("cam speed 1.2f");
-        playBtn22.setFontSize(20);
-        container2dTopLeft.addChild(playBtn22);
-        playBtn22.addClickCommands(source -> {
-            flyCamAppState.getCamera().setMoveSpeed(1.2f);
-        });
-
-        Button playEffBtn = new Button("播放 测试 特效 eff");
-        playEffBtn.setFontSize(20);
-        container2dTopLeft.addChild(playEffBtn);
-        playEffBtn.addClickCommands(source -> {
-            ParticleEmitter effect = MiniUtil.createEffect("./flame.png", 4, 4, 3.8f);
-            effect.emitAllParticles();
-        });
 
         selLabel = new Label("当前未选中节点");
         selLabel.setFontSize(25);
@@ -294,8 +226,37 @@ public class Show3D extends SimpleApplication{
         guiNode.attachChild(selLabel);
         updateTextDelay = 5;
 
+        container2dTopRight = new Container();
+        guiNode.attachChild(container2dTopRight);
+        container2dTopRight.setLocalTranslation(300, settings.getHeight()-3, 0);
+
         TimeLine timeLine = new TimeLine();
         container2dTopRight.addChild(timeLine);
+
+        menu = new Container();
+        guiNode.attachChild(menu);
+        menu.setLocalTranslation(1, settings.getHeight()-1, 0);
+
+        Label txt = new Label("设置: ");
+        txt.setFontSize(15);
+        menu.addChild(txt);
+
+        MiniUtil.Btn("摄像机归位",20, menu, source -> resetCam());
+        MiniUtil.Btn("显示/隐藏 OpenGL 信息",20, menu, f -> {
+            showInfo = !showInfo;
+            toggleInfo();
+        });
+        MiniUtil.Btn("播放 测试 特效 eff",20, menu, f -> {
+            ParticleEmitter effect = MiniUtil.createEffect("./flame.png", 4, 4, 3.8f);
+            effect.emitAllParticles();
+        });
+        MiniUtil.Btn("保存到 frames.dat",20, menu, f -> {
+            saveFramesToFile();
+        });
+        MiniUtil.Btn("读取 frames.dat",20, menu, f -> readFrameFromFile());
+        MiniUtil.Btn("cam speed 0.2f",20, menu, f -> flyCamAppState.getCamera().setMoveSpeed(0.2f));
+        MiniUtil.Btn("cam speed 1.2f",20, menu, f -> flyCamAppState.getCamera().setMoveSpeed(1.2f));
+        MiniUtil.Btn("播放一帧 ",30, menu, f -> play());
     }
 
     private void toggleInfo() {
@@ -438,13 +399,6 @@ public class Show3D extends SimpleApplication{
                 Node geo = frame.item3d.geo;
                 ConceptAnimationCtrl link = new ConceptAnimationCtrl(SpatialChanges.translation(geo), 0.35f, SpatialInterpolations.translateTo(geo, frame.endPos), EasingFunction.EASE_OUT_QUART, frame);
 
-                Item3D item3DPush = item3dMap.get(frame.pushName);
-                Item3D item3DTarget = item3dMap.get(frame.targetName);
-
-                HashMap<String, Item3D> items = Link3dMgr.getItemsByLinkey(frame.link3dKey);
-                items.put(frame.pushName,item3DPush);
-                items.put(frame.targetName,item3DTarget);
-
                 update3DLink(frame);
 
                 // 缓动
@@ -493,7 +447,7 @@ public class Show3D extends SimpleApplication{
         }
         Frame3D frame3D = new Frame3D();
         frame3D.item3d = item3D2;
-        frame3D.opt = PUSH_CONCEPT_Y;                             // 标注这次的操作是: 更新高度
+        frame3D.opt = PUSH_CONCEPT_Y;                               // 标注这次的操作是: 更新高度
         Vector3f posNow = frame3D.item3d.geo.getLocalTranslation(); // 当前位置
         frame3D.startPos.set(posNow);
         frame3D.endPos.set(posNow.x, sum, posNow.z);                // 将要移动到的位置
@@ -506,31 +460,49 @@ public class Show3D extends SimpleApplication{
     }
 
     public void update3DLink(Frame3D frame) {
-        Node node = Link3dMgr.get(frame.link3dKey);
+        Link3D link = Link3dMgr.getLinkByLinKey(frame.link3dKey);
         Item3D item3DPush = item3dMap.get(frame.pushName);
         Item3D item3DTarget = item3dMap.get(frame.targetName);
         if(item3DTarget!=null && item3DPush!=null && item3DTarget.geo!=null && item3DPush.geo!=null){
-            Vector3f endPos = item3DTarget.geo.getLocalTranslation();
-            Vector3f startPos = item3DPush.geo.getLocalTranslation();
-            if (node==null){
-                node = MiniUtil.putLine2D(matLine2D, startPos, endPos, 0.2f);
-                Link3dMgr.put(frame.link3dKey,node);
-            }else{
-                LineControl ctrl = node.getUserData("ctrl");
-                ctrl.setPoint(0,startPos);
-                ctrl.setPoint(1,endPos);
+            if (link==null){
+                //创建 link
+                link = new Link3D(matLine2D, item3DPush, item3DTarget, 0.2f);
+                rootNode.attachChild(link);
+
+                //记录 link
+                Link3dMgr.putLinkByLinKey(frame.link3dKey,link);
+                Link3dMgr.putLinkByItem(item3DTarget,link);
+                Link3dMgr.putLinkByItem(item3DPush,link);
+            }
+            updateLinkAboutItem(item3DTarget);
+            updateLinkAboutItem(item3DPush);
+        }
+    }
+
+    private void updateLinkAboutItem(Item3D item) {
+        ArrayList<Link3D> links = Link3dMgr.getLinkByItem(item);
+        for (Link3D aLink : links) {
+            Vector3f pos1 = item.geo.getLocalTranslation();
+            if(aLink.pushItem.equals(item)){
+                aLink.ctrl.setPoint(0,pos1);
+            }
+            if(aLink.targetItem.equals(item)){
+                aLink.ctrl.setPoint(1,pos1);
             }
         }
     }
 
+    private void log(String s){
+        System.out.println(s);
+    }
     int playIndex = -1;
     private void play() {
         playIndex++;
-        System.out.println("playIndex:"+playIndex);
+        //System.out.println("playIndex:"+playIndex);
         float xInFrame = 0f;
         Frame3D frame3D = frameMgr.get(playIndex);
         if(frame3D==null) {
-            System.out.println("播放帧已用完");
+            System.out.println("播放帧已用完 "+playIndex);
             return;
         }
 
@@ -561,6 +533,7 @@ public class Show3D extends SimpleApplication{
                 Item3D item3D = itemMapForPlay.get(frame3D.targetName);
                 frame3D.item3d = item3D;
                 moveQueue.add(frame3D);
+                log(frame3D.pushName+" → "+frame3D.targetName);
                 break;
             }
             default:{
