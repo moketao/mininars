@@ -22,6 +22,7 @@ public class Frame3DSerializer extends Serializer {
         frame3D.link3dKey = (String) Serializer.readClassAndObject(byteBuffer);
         frame3D.targetName = (String) Serializer.readClassAndObject(byteBuffer);
         frame3D.pushName = (String) Serializer.readClassAndObject(byteBuffer);
+        frame3D.exp = (float) Serializer.readClassAndObject(byteBuffer);
 
         return (T) frame3D;
     }
@@ -40,5 +41,6 @@ public class Frame3DSerializer extends Serializer {
         Serializer.writeClassAndObject(byteBuffer,frame3D.link3dKey);
         Serializer.writeClassAndObject(byteBuffer,frame3D.targetName);
         Serializer.writeClassAndObject(byteBuffer,frame3D.pushName);
+        Serializer.writeClassAndObject(byteBuffer,frame3D.exp);
     }
 }

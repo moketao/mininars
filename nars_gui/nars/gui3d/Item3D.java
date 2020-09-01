@@ -11,5 +11,5 @@ import java.util.HashMap;
 public class Item3D extends AbstractMessage {
     public boolean hasInit = false; // 是否已经创建了对应的 3d 对象
     public Node geo;
-    public HashMap<String, Float> valForHeight = new HashMap<>();
+    public HashMap<String, Float> pushMap = new HashMap<>();
 }

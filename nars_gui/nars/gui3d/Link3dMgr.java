@@ -1,6 +1,13 @@
 package nars.gui3d;
+import com.jme3.math.Vector2f;
+import com.jme3.scene.Mesh;
+import com.jme3.scene.VertexBuffer;
+import com.jme3.util.BufferUtils;
+
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
+
 public class Link3dMgr {
     public static HashMap<Item3D, ArrayList<Link3D>> item2link = new HashMap<>();
     public static HashMap<String, Link3D> linkMap = new HashMap<>();
@@ -33,5 +40,22 @@ public class Link3dMgr {
             lineControls = new ArrayList<>();
         }
         return lineControls;
+    }
+
+    public static void updateUV(float tpf) {
+        for (Map.Entry<String, Link3D> e : linkMap.entrySet()) {
+            Link3D link = e.getValue();
+            Mesh mesh = link.ctrl.mesh;
+            VertexBuffer uvs = mesh.getBuffer(VertexBuffer.Type.TexCoord);
+            float dif = 0.003f;
+            Vector2f[] texCoord= new Vector2f[uvs.getNumElements()];
+            for(int i = 0; i<uvs.getNumElements(); i++) {
+                float u=(Float)uvs.getElementComponent(i, 0);
+                float v=(Float)uvs.getElementComponent(i, 1);
+                texCoord[i]= new Vector2f(u -dif ,v);
+            }
+            mesh.clearBuffer(VertexBuffer.Type.TexCoord);
+            mesh.setBuffer(VertexBuffer.Type.TexCoord, 2, BufferUtils.createFloatBuffer(texCoord));
+        }
     }
 }

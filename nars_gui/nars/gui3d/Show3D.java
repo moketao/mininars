@@ -146,7 +146,7 @@ public class Show3D extends SimpleApplication{
         matDarkGray = MiniUtil.createMat(ColorRGBA.DarkGray);
         matConcept = MiniUtil.createPngMat("./node.png");
         matTask = MiniUtil.createPngMat("./task.png");
-        matLine2D = MiniUtil.createPngMat("./line_01.png");
+        matLine2D = MiniUtil.createPngMat("./line_01.png",true);
         matLine2D.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.AlphaAdditive);
         matConceptSml = MiniUtil.createPngMat("./node_sml.png");
     }
@@ -160,9 +160,10 @@ public class Show3D extends SimpleApplication{
         this.lostFocusBehavior = LostFocusBehavior.Disabled;
         resetCam();
         MiniUtil.putLine(0, 2.5f, 0.0f,0f, 1.5f, 0f,this.matDarkGray);
-        MiniUtil.putArrow(Vector3f.ZERO, Vector3f.UNIT_X, matRed);
-        MiniUtil.putArrow(Vector3f.ZERO, Vector3f.UNIT_Y, matGreen);
-        MiniUtil.putArrow(Vector3f.ZERO, Vector3f.UNIT_Z, matBlue);
+        Vector3f pos = new Vector3f(0, 0.01f, 0);
+        MiniUtil.putArrow(pos, Vector3f.UNIT_X, matRed);
+        MiniUtil.putArrow(pos, Vector3f.UNIT_Y, matGreen);
+        MiniUtil.putArrow(pos, Vector3f.UNIT_Z, matBlue);
         MiniUtil.putGrid(new Vector3f(0F, 0.0F, 0.0F), matDarkGray);
         createTxt3d();
         createFloatTxt3d();
@@ -256,7 +257,7 @@ public class Show3D extends SimpleApplication{
         MiniUtil.Btn("读取 frames.dat",20, menu, f -> readFrameFromFile());
         MiniUtil.Btn("cam speed 0.2f",20, menu, f -> flyCamAppState.getCamera().setMoveSpeed(0.2f));
         MiniUtil.Btn("cam speed 1.2f",20, menu, f -> flyCamAppState.getCamera().setMoveSpeed(1.2f));
-        MiniUtil.Btn("播放一帧 ",30, menu, f -> play());
+        MiniUtil.Btn("推理一帧 ",30, menu, f -> play());
     }
 
     private void toggleInfo() {
@@ -405,6 +406,7 @@ public class Show3D extends SimpleApplication{
                 geo.addControl(link);
             }
         }
+        Link3dMgr.updateUV(tpf);
         super.simpleUpdate(tpf);
     }
 
@@ -436,7 +438,7 @@ public class Show3D extends SimpleApplication{
         }
         Item3D item3D2 = item3dMap.get(target.getName());
 
-        HashMap<String, Float> valForHeight = item3D2.valForHeight; // 推高的力量集 (来自其它 concept )
+        HashMap<String, Float> valForHeight = item3D2.pushMap;      // 推高的力量集 (来自其它 concept )
         String key = push.getName();                                // 推者的 key
         valForHeight.put(key,pushPower);                            // 记录当前信仰受到的推力
 
@@ -446,6 +448,7 @@ public class Show3D extends SimpleApplication{
             sum+=f;                                                 // todo: 使用 FastMath.interpolateLinear 算偏移集,再平均, 或者 从上至下 树形分配位置.
         }
         Frame3D frame3D = new Frame3D();
+        frame3D.exp = truth.getExpectation();                       // 记录经验值 , 可用来展示神经突触 ( Link3D ) 的厚度/强度
         frame3D.item3d = item3D2;
         frame3D.opt = PUSH_CONCEPT_Y;                               // 标注这次的操作是: 更新高度
         Vector3f posNow = frame3D.item3d.geo.getLocalTranslation(); // 当前位置
@@ -463,10 +466,14 @@ public class Show3D extends SimpleApplication{
         Link3D link = Link3dMgr.getLinkByLinKey(frame.link3dKey);
         Item3D item3DPush = item3dMap.get(frame.pushName);
         Item3D item3DTarget = item3dMap.get(frame.targetName);
-        if(item3DTarget!=null && item3DPush!=null && item3DTarget.geo!=null && item3DPush.geo!=null){
+        if( frame.exp > 0.5 && item3DTarget!=null && item3DPush!=null && item3DTarget.geo!=null && item3DPush.geo!=null){
             if (link==null){
+                // 用经验值确定 link 的宽度
+                System.out.println( "----------- ★ "+frame.pushName+" →→→ "+frame.targetName+": "+ frame.exp  );
+                float w = FastMath.interpolateLinear(frame.exp, 0.01f, 0.3f);
+
                 //创建 link
-                link = new Link3D(matLine2D, item3DPush, item3DTarget, 0.2f);
+                link = new Link3D(matLine2D, item3DPush, item3DTarget, w);
                 rootNode.attachChild(link);
 
                 //记录 link

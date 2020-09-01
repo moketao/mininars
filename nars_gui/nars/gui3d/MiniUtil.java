@@ -81,8 +81,14 @@ public class MiniUtil {
         return m;
     }
     public static Material createPngMat(String pngPath){
+        return createPngMat(pngPath,false);
+    }
+    public static Material createPngMat(String pngPath,boolean repeatUV){
         Material m = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
         Texture textureNode = assetManager.loadTexture( pngPath );
+        if( repeatUV ){
+            textureNode.setWrap(Texture.WrapMode.Repeat);
+        }
         m.setTexture("Texture", textureNode);
         m.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
         return m;

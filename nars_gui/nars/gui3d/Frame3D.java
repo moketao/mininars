@@ -45,6 +45,9 @@ public class Frame3D extends AbstractMessage {
     /** 两个概念之间的 3d 树突对象 的 key */
     public String link3dKey;
 
+    /** 经验值 */
+    public float exp = 0;
+
     public String pushName;
     public String targetName;
 }
