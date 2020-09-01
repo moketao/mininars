@@ -470,7 +470,7 @@ public class Show3D extends SimpleApplication{
             if (link==null){
                 // 用经验值确定 link 的宽度
                 System.out.println( "----------- ★ "+frame.pushName+" →→→ "+frame.targetName+": "+ frame.exp  );
-                float w = FastMath.interpolateLinear(frame.exp, 0.01f, 0.3f);
+                float w = FastMath.interpolateLinear(frame.exp, 0.01f, 0.32f);
 
                 //创建 link
                 link = new Link3D(matLine2D, item3DPush, item3DTarget, w);
