@@ -413,7 +413,11 @@ public class Show3D extends SimpleApplication{
     public void move(Task task) {
         Sentence parentBelief = task.getParentBelief();
         Task parentTask = task.getParentTask();
-        boolean isA = parentBelief.getContent() instanceof Inheritance;
+        if(parentBelief==null){
+            return; //todo
+        }
+        Term content = parentBelief.getContent();
+        boolean isA = content instanceof Inheritance;
         boolean isB = parentTask.getSentence().getContent() instanceof Inheritance;
         boolean isA2B = task.getSentence().getContent() instanceof Inheritance;
         if( isA && isB && isA2B){                                                                   // 针对下面的逻辑,举个例: 乌鸦是鸟, 鸟是动物
@@ -437,7 +441,9 @@ public class Show3D extends SimpleApplication{
             pushPower = baseY + truth.getExpectation();             // 基础高度 + 经验高度
         }
         Item3D item3D2 = item3dMap.get(target.getName());
-
+        if(item3D2==null){
+            return;
+        }
         HashMap<String, Float> valForHeight = item3D2.pushMap;      // 推高的力量集 (来自其它 concept )
         String key = push.getName();                                // 推者的 key
         valForHeight.put(key,pushPower);                            // 记录当前信仰受到的推力
