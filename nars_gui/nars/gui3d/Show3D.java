@@ -433,6 +433,7 @@ public class Show3D extends SimpleApplication{
     }
 
     private void moveOneConcept(Term push,Term target, TruthValue truth) {
+        //todo: 性能优化, 避免卡顿 (过滤不必要的节点显示, 取消大部分贴图的透明通道 )
         Float baseY = 3f;
         Float pushPower;
         if(truth.getConfidence()<0.5){
