@@ -66,19 +66,19 @@ public class InputWindow extends NarsFrame implements ActionListener, InputChann
         c.weightx = 1.0;
         c.weighty = 1.0;
 //        inputText = new JTextArea("<乌鸦 --> 鸟>.\n<鸟 --> 动物>.");
-//        inputText = new JTextArea(
-//                   "<小特 --> 乌鸦>."
-//                +"\n<乌鸦 --> 鸟>."
-//                +"\n<鸟 --> 动物>."
-//        );
         inputText = new JTextArea(
-                 "\n<小特 --> 鸟>."
-                +"\n<小特 --> 乌鸦>."
-                +"\n<小特 --> 动物>."
+                   "<小特 --> 乌鸦>."
                 +"\n<乌鸦 --> 鸟>."
-                +"\n<乌鸦 --> 动物>."
                 +"\n<鸟 --> 动物>."
         );
+//        inputText = new JTextArea(
+//                 "\n<小特 --> 鸟>."
+//                +"\n<小特 --> 乌鸦>."
+//                +"\n<小特 --> 动物>."
+//                +"\n<乌鸦 --> 鸟>."
+//                +"\n<乌鸦 --> 动物>."
+//                +"\n<鸟 --> 动物>."
+//        );
         JScrollPane scrollPane = new JScrollPane(inputText);
 //        gridbag.setConstraints(inputText, c);
         gridbag.setConstraints(scrollPane, c);

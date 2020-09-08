@@ -46,7 +46,8 @@ import java.util.ArrayList;
  * Main window of NARS GUI
  */
 public class MainWindow extends NarsFrame implements ActionListener, OutputChannel {
-
+    public static int MaxLine = 200;
+    public static int MinLine = 100;
     /**
      * Reference to the reasoner
      */
@@ -372,6 +373,7 @@ public class MainWindow extends NarsFrame implements ActionListener, OutputChann
 			final String text2 = text;
 			SwingUtilities.invokeLater( new Runnable() {
     			@Override public void run() {
+    			    InferenceWindow.limit(ioText,MaxLine,MinLine);
     				ioText.append(text2);
     			}});
     	}

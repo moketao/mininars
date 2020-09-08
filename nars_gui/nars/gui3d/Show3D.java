@@ -35,7 +35,9 @@ import nars.storage.Memory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 
 public class Show3D extends SimpleApplication{
 
@@ -257,6 +259,7 @@ public class Show3D extends SimpleApplication{
         MiniUtil.Btn("读取 frames.dat",20, menu, f -> readFrameFromFile());
         MiniUtil.Btn("cam speed 0.2f",20, menu, f -> flyCamAppState.getCamera().setMoveSpeed(0.2f));
         MiniUtil.Btn("cam speed 1.2f",20, menu, f -> flyCamAppState.getCamera().setMoveSpeed(1.2f));
+        MiniUtil.Btn("打印高度",20, menu, f -> printH());
         MiniUtil.Btn("推理一帧 ",30, menu, f -> play());
     }
 
@@ -274,6 +277,12 @@ public class Show3D extends SimpleApplication{
     public void append(String opt, Item item) {
         if(item==null) return;
         if(!online) return;
+        if(item.getKey().contains(">") || item.getKey().contains("(")){
+            return; // todo:换一种判断方式,不要用字符串判断?
+        }
+        if(item.getKey()==null){
+            System.out.println(23);
+        }
         Frame3D frame = createFrameAnd3dObj(item,opt,null);
         frameQueue.add(frame); //先加到等待队列,等线程有空了再处理(放到场景中)
         frame.targetName = item.getKey();
@@ -431,11 +440,14 @@ public class Show3D extends SimpleApplication{
             moveOneConcept(B2.getSubject(), B2.getPredicate(),task.getSentence().getTruth() );      // 因为 task 推出 '乌鸦是动物', 所以 '动物' 的高度会被继续推高一次
         }
     }
-
+    HashMap<String,Item3D> tmpMap = new HashMap();
     private void moveOneConcept(Term push,Term target, TruthValue truth) {
         //todo: 性能优化, 避免卡顿 (过滤不必要的节点显示, 取消大部分贴图的透明通道 )
         Float baseY = 3f;
         Float pushPower;
+        if(push.getName().contains(">") || target.getName().contains(">") || push.getName().contains("(") || target.getName().contains("(")){
+            return; // todo:换一种判断方式,不要用字符串判断?
+        }
         if(truth.getConfidence()<0.5){
             pushPower = baseY;                                      // 信心不足就不推了, 只给基础高度 1
         }else{
@@ -445,6 +457,7 @@ public class Show3D extends SimpleApplication{
         if(item3D2==null){
             return;
         }
+        tmpMap.put(target.getName(),item3D2);
         HashMap<String, Float> valForHeight = item3D2.pushMap;      // 推高的力量集 (来自其它 concept )
         String key = push.getName();                                // 推者的 key
         valForHeight.put(key,pushPower);                            // 记录当前信仰受到的推力
@@ -468,7 +481,18 @@ public class Show3D extends SimpleApplication{
 
         frame3D.link3dKey = Link3dMgr.createKey(frame3D.pushName,frame3D.targetName);
     }
+    public void printH(){
+        for (Map.Entry<String, Item3D> stringItem3DEntry : tmpMap.entrySet()) {
+            Item3D value = stringItem3DEntry.getValue();
+            Collection<Float> values = value.pushMap.values();
+            float sum = 0;
+            for (Float aFloat : values) {
+                sum += aFloat;
+            }
+            System.out.println(stringItem3DEntry.getKey()+":"+sum);
+        }
 
+    }
     public void update3DLink(Frame3D frame) {
         Link3D link = Link3dMgr.getLinkByLinKey(frame.link3dKey);
         Item3D item3DPush = item3dMap.get(frame.pushName);

@@ -26,8 +26,12 @@ package nars.gui;
 import nars.io.IInferenceRecorder;
 
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.awt.event.*;
+
+import static nars.gui.MainWindow.MaxLine;
+import static nars.gui.MainWindow.MinLine;
 //import nars.term.Term;
 
 /**
@@ -136,8 +140,26 @@ public class InferenceWindow extends NarsFrame implements ActionListener, ItemLi
      */
     public void append(String str) {
         text.append(str);
+
+        limit(text,MaxLine,MinLine);
+
         if (!watched.equals("") && (str.indexOf(watched) != -1)) {
             recorder.stop();
+        }
+    }
+
+    public static void limit(JTextArea text, int scroll_buffer_size, int cut) {
+        int lineCount = text.getLineCount();
+        int numLinesToTrunk = lineCount - scroll_buffer_size;
+        if(numLinesToTrunk>0){
+            try
+            {
+                int posOfLastLineToTrunk = text.getLineEndOffset(cut);
+                text.replaceRange("",0,posOfLastLineToTrunk);
+            }
+            catch (BadLocationException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 

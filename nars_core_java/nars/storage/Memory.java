@@ -505,6 +505,7 @@ public class Memory {
         currentConcept = getConcept(currentTerm); // getConcept 里包含有一个 new concept 的操作, 还有一个对应的 show3d 记录操作(insert concept).
         if (currentConcept != null) {
             Show3D.inst().append(INSERT_TASK,task);
+            Show3D.inst().append(INSERT_CONCEPT, currentConcept);
             activateConcept(currentConcept, task.getBudget());
             currentConcept.directProcess(task);
         }else{
