@@ -1,6 +1,6 @@
 MiniNARS
 -------------------------
-![MiniNARS_logo](http://poerlang.com/mininars.png)
+![MiniNARS_logo](https://img.poerlang.com//logo/mininars.png)
 
 本项目源自 https://github.com/patham9/opennars_declarative_core , 一个以**通用人工智能**( [Artificial General Intelligence](http://www.agi-conf.org/) )为目标的项目, 由 [王培](https://cis.temple.edu/~pwang/) 老师发起.
 
